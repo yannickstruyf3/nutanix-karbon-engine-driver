@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 
@@ -65,6 +64,7 @@ type state struct {
 	ClusterPassword     string
 	FileSystem          string
 	StorageContainer    string
+	KarbonVersion       string
 
 	ClusterInfo types.ClusterInfo
 }
@@ -80,14 +80,14 @@ func NewDriver() types.Driver {
 	driver.driverCapabilities.AddCapability(types.SetVersionCapability)
 	driver.driverCapabilities.AddCapability(types.GetClusterSizeCapability)
 	driver.driverCapabilities.AddCapability(types.SetClusterSizeCapability)
-	// logrus.Debugf("[TESTING] NewDriver")
-	// logrus.Infof("[TESTING] NewDriver")
+	// logrus.Debugf("[DEBUG] NewDriver")
+	// logrus.Infof("[DEBUG] NewDriver")
 	return driver
 }
 
 // GetDriverCreateOptions implements driver interface
 func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags, error) {
-	logrus.Infof("[TESTING] GetDriverCreateOptions")
+	logrus.Infof("[DEBUG] GetDriverCreateOptions")
 	driverFlag := types.DriverFlags{
 		Options: make(map[string]*types.Flag),
 	}
@@ -195,10 +195,15 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Usage: "Reclaim policy",
 	}
 	driverFlag.Options["flashmode"] = &types.Flag{
-		Type:  types.StringType,
+		Type:  types.BoolType,
 		Usage: "Flash mode",
 	}
-	logrus.Info("[TESTING] END GetDriverCreateOptions ")
+	driverFlag.Options["karbonversion"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Karbon version",
+	}
+
+	logrus.Info("[DEBUG] END GetDriverCreateOptions ")
 	logrus.Info(driverFlag)
 
 	return &driverFlag, nil
@@ -206,7 +211,7 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 
 // GetDriverUpdateOptions implements driver interface
 func (d *Driver) GetDriverUpdateOptions(ctx context.Context) (*types.DriverFlags, error) {
-	logrus.Infof("[TESTING] GetDriverUpdateOptions")
+	logrus.Infof("[DEBUG] GetDriverUpdateOptions")
 	driverFlag := types.DriverFlags{
 		Options: make(map[string]*types.Flag),
 	}
@@ -228,30 +233,36 @@ func (d *Driver) GetDriverUpdateOptions(ctx context.Context) (*types.DriverFlags
 // Create implements driver interface
 func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types.ClusterInfo) (*types.ClusterInfo, error) {
 
-	logrus.Infof("[TESTING] Create from module")
-	logrus.Infof("[TESTING] print opts")
-	utils.PrintToJSON(opts, "OPTS: ")
-	logrus.Infof("[TESTING] print ctx")
-	utils.PrintToJSON(ctx, "CTX: ")
+	logrus.Infof("[DEBUG] Create from module")
+	utils.PrintToJSON(opts, "[DEBUG] Create OPTS: ")
+	utils.PrintToJSON(ctx, "[DEBUG] Create ctx: ")
 	state, err := getStateFromOpts(opts)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("[TESTING] state")
-	utils.PrintToJSON(state, "State: ")
+	utils.PrintToJSON(state, "[DEBUG] Create State: ")
 	info := &types.ClusterInfo{}
-	utils.PrintToJSON(info, "Info: ")
+	utils.PrintToJSON(info, "[DEBUG] Create Info: ")
 
-	cred := &client.Credentials{state.Endpoint, state.Username, state.Password, "", "", true, true, ""}
-	client, err := v3.NewV3Client(*cred)
+	karbonManager, err := NewKarbonManager(
+		client.Credentials{
+			state.Endpoint,
+			state.Username,
+			state.Password,
+			"",
+			"",
+			true,
+			true,
+			"",
+		}, state.KarbonVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = UpdateStateWithUUIDs(client, &state)
+	err = UpdateStateWithUUIDs(karbonManager.GetClient(), &state)
 	if err != nil {
 		return nil, err
 	}
-	utils.PrintToJSON(state, "State post ref search: ")
+	utils.PrintToJSON(state, "[DEBUG] Create State after searching for UIDs: ")
 	//commented for testing purposes
 	karbonClusterRequest := &KarbonClusterRequest{
 		Name:                  state.DisplayName,
@@ -281,43 +292,27 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 		FileSystem:            state.FileSystem,
 		FlashMode:             false,
 	}
-	KarbonClusterUUID, err := RequestKarbonCluster(client, karbonClusterRequest, true)
+	KarbonClusterUUID, err := karbonManager.RequestKarbonCluster(karbonClusterRequest, true)
 	if err != nil {
 		return nil, err
 	}
 	// KarbonClusterUUID := "37aa1757-c049-4380-6ad4-167951e335dd"
 	state.KarbonClusterUUID = KarbonClusterUUID
 
-	// get cluster
-	cluster, err := GetKarbonCluster(client, KarbonClusterUUID)
-	if err != nil {
-		return nil, err
-
-	}
-
 	err = storeState(info, state)
 	if err != nil {
 		logrus.Debugf("error storing state %v", err)
 		return info, err
 	}
-	log.Println("==GET cluster==")
-	utils.PrintToJSON(cluster, "[DEBUG]")
-	log.Println("==END GET cluster==")
 
-	log.Println("==GET info==")
-	utils.PrintToJSON(info, "[DEBUG]")
-	log.Println("==END GET info==")
-
-	log.Println("==GET state==")
-	utils.PrintToJSON(state, "[DEBUG]")
-	log.Println("==END GET state==")
-	log.Println("=Returning==")
+	utils.PrintToJSON(info, "[DEBUG] Create END info: ")
+	utils.PrintToJSON(state, "[DEBUG] Create END state: ")
 	return info, nil
 }
 
 // Update implements driver interface
 func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *types.DriverOptions) (*types.ClusterInfo, error) {
-	logrus.Infof("[TESTING] update")
+	logrus.Infof("[DEBUG] Update")
 	state, err := getState(info)
 	if err != nil {
 		return nil, err
@@ -326,34 +321,43 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 	if err != nil {
 		return nil, err
 	}
-	utils.PrintToJSON(ctx, "[Update] ctx: ")
-	utils.PrintToJSON(info, "[Update] info: ")
-	utils.PrintToJSON(opts, "[Update] opts: ")
-	utils.PrintToJSON(state, "[Update] state: ")
-	utils.PrintToJSON(newState, "[Update] newState: ")
-	cred := &client.Credentials{state.Endpoint, state.Username, state.Password, "", "", true, true, ""}
-	client, err := v3.NewV3Client(*cred)
+	utils.PrintToJSON(ctx, "[DEBUG] Update ctx: ")
+	utils.PrintToJSON(info, "[DEBUG] Update info: ")
+	utils.PrintToJSON(opts, "[DEBUG] Update opts: ")
+	utils.PrintToJSON(state, "[DEBUG] Update state: ")
+	utils.PrintToJSON(newState, "[DEBUG] Update newState: ")
+	karbonManager, err := NewKarbonManager(
+		client.Credentials{
+			state.Endpoint,
+			state.Username,
+			state.Password,
+			"",
+			"",
+			true,
+			true,
+			"",
+		}, state.KarbonVersion)
 	// currentAmountOfWorkerNodes := state.AmountOfWorkerNodes
-	karbonCluster, err := GetKarbonCluster(client, state.KarbonClusterUUID)
+	// state.KarbonClusterUUID
+	newAmountOfWorkerNodes := newState.AmountOfWorkerNodes
+	currentAmountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(state.KarbonClusterUUID)
 	if err != nil {
 		return nil, err
 	}
-	newAmountOfWorkerNodes := newState.AmountOfWorkerNodes
-	currentAmountOfWorkerNodes := int64(len(karbonCluster.K8sConfig.Workers))
-	logrus.Infof("[TESTING] update currentAmountOfWorkerNodes %d", currentAmountOfWorkerNodes)
-	logrus.Infof("[TESTING] update newAmountOfWorkerNodes %d", newAmountOfWorkerNodes)
+	logrus.Infof("[DEBUG] update currentAmountOfWorkerNodes %d", currentAmountOfWorkerNodes)
+	logrus.Infof("[DEBUG] update newAmountOfWorkerNodes %d", newAmountOfWorkerNodes)
 	if currentAmountOfWorkerNodes > newAmountOfWorkerNodes {
 		amount := currentAmountOfWorkerNodes - newAmountOfWorkerNodes
-		logrus.Infof("[TESTING] scaling down by nodes %d", amount)
-		err = ScaleDownKarbonCluster(client, karbonCluster, amount)
+		logrus.Infof("[DEBUG] scaling down by nodes %d", amount)
+		err = karbonManager.ScaleDownKarbonCluster(state.KarbonClusterUUID, amount)
 		if err != nil {
 			return nil, err
 		}
 	}
 	if currentAmountOfWorkerNodes < newAmountOfWorkerNodes {
 		amount := newAmountOfWorkerNodes - currentAmountOfWorkerNodes
-		logrus.Infof("[TESTING] scaling up by nodes %d", amount)
-		err = ScaleUpKarbonCluster(client, karbonCluster, amount)
+		logrus.Infof("[DEBUG] scaling up by nodes %d", amount)
+		err = karbonManager.ScaleUpKarbonCluster(state.KarbonClusterUUID, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -363,27 +367,42 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 }
 
 func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types.ClusterInfo, error) {
-	logrus.Infof("[TESTING] PostCheck")
+	logrus.Infof("[DEBUG] PostCheck")
 	state, err := getState(info)
 	if err != nil {
 		return nil, err
 	}
 
 	utils.PrintToJSON(state, "[PostCheckSTATE] ")
-	cred := &client.Credentials{state.Endpoint, state.Username, state.Password, "", "", true, true, ""}
-	client, _ := v3.NewV3Client(*cred)
+	karbonManager, err := NewKarbonManager(
+		client.Credentials{
+			state.Endpoint,
+			state.Username,
+			state.Password,
+			"",
+			"",
+			true,
+			true,
+			"",
+		}, state.KarbonVersion)
 
-	kubeconfig, err := GetKubeConfigForCluster(client, state.KarbonClusterUUID)
+	kubeconfig, err := karbonManager.GetKubeConfigForCluster(state.KarbonClusterUUID)
 	if err != nil {
 		return nil, err
 	}
 
-	cluster, err := GetKarbonCluster(client, state.KarbonClusterUUID)
-
+	amountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(state.KarbonClusterUUID)
+	if err != nil {
+		return nil, err
+	}
+	version, err := karbonManager.GetKubernetesVersion(state.KarbonClusterUUID)
+	if err != nil {
+		return nil, err
+	}
 	info.Endpoint = kubeconfig.Clusters[0].Cluster.Server
-	info.Version = *cluster.K8sConfig.Version
+	info.Version = version
 	info.RootCaCertificate = kubeconfig.Clusters[0].Cluster.CertificateAuthorityData
-	info.NodeCount = int64(len(cluster.K8sConfig.Workers))
+	info.NodeCount = amountOfWorkerNodes
 	serviceAccountToken, err := GenerateServiceAccountToken(kubeconfig)
 	if err != nil {
 		return nil, err
@@ -395,24 +414,33 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 
 // Remove implements driver interface
 func (d *Driver) Remove(ctx context.Context, info *types.ClusterInfo) error {
-	logrus.Infof("[TESTING]remove")
+	logrus.Infof("[DEBUG]remove")
 	state, err := getState(info)
 	if err != nil {
-		logrus.Infof("[TESTING]Remove Error occured!!!")
+		logrus.Infof("[DEBUG]Remove Error occured!!!")
 		return err
 	}
 	utils.PrintToJSON(info, "[Remove Info] ")
 	utils.PrintToJSON(state, "[Remove STATE] ")
-	cred := &client.Credentials{state.Endpoint, state.Username, state.Password, "", "", true, true, ""}
-	client, _ := v3.NewV3Client(*cred)
-	logrus.Infof("[TESTING]Deleting cluster ")
-	DeleteKarbonCluster(client, state.KarbonClusterUUID)
-	logrus.Infof("[TESTING]Done cluster ")
+	karbonManager, err := NewKarbonManager(
+		client.Credentials{
+			state.Endpoint,
+			state.Username,
+			state.Password,
+			"",
+			"",
+			true,
+			true,
+			"",
+		}, state.KarbonVersion)
+	logrus.Infof("[DEBUG]Deleting cluster ")
+	karbonManager.DeleteKarbonCluster(state.KarbonClusterUUID)
+	logrus.Infof("[DEBUG]Done cluster ")
 	return nil
 }
 
 func (d *Driver) GetVersion(ctx context.Context, info *types.ClusterInfo) (*types.KubernetesVersion, error) {
-	logrus.Info("[TESTING] GetVersion")
+	logrus.Info("[DEBUG] GetVersion")
 	cluster, err := d.getClusterStats(ctx, info)
 
 	if err != nil {
@@ -455,7 +483,7 @@ func (d *Driver) SetVersion(ctx context.Context, info *types.ClusterInfo, versio
 }
 
 func (d *Driver) GetClusterSize(ctx context.Context, info *types.ClusterInfo) (*types.NodeCount, error) {
-	logrus.Info("[TESTING] GetClusterSize")
+	logrus.Info("[DEBUG] GetClusterSize")
 	cluster, err := d.getClusterStats(ctx, info)
 
 	if err != nil {
@@ -486,7 +514,7 @@ func (d *Driver) SetClusterSize(ctx context.Context, info *types.ClusterInfo, co
 	// 	return err
 	// }
 
-	logrus.Info("[TESTING] updating cluster size")
+	logrus.Info("[DEBUG] updating cluster size")
 
 	// _, err = client.Projects.Zones.Clusters.NodePools.SetSize(state.ProjectID, state.Zone, cluster.Name, cluster.NodePools[0].Name, &raw.SetNodePoolSizeRequest{
 	// 	NodeCount: count.Count,
@@ -508,12 +536,12 @@ func (d *Driver) SetClusterSize(ctx context.Context, info *types.ClusterInfo, co
 }
 
 func (d *Driver) GetCapabilities(ctx context.Context) (*types.Capabilities, error) {
-	logrus.Info("[TESTING] GetCapabilities")
+	logrus.Info("[DEBUG] GetCapabilities")
 	return &d.driverCapabilities, nil
 }
 
 func (d *Driver) RemoveLegacyServiceAccount(ctx context.Context, info *types.ClusterInfo) error {
-	logrus.Info("[TESTING] RemoveLegacyServiceAccount")
+	logrus.Info("[DEBUG] RemoveLegacyServiceAccount")
 	// state, err := getState(info)
 	// if err != nil {
 	// 	return err
@@ -551,7 +579,7 @@ func (d *Driver) ETCDRestore(ctx context.Context, clusterInfo *types.ClusterInfo
 }
 
 func (d *Driver) GetK8SCapabilities(ctx context.Context, options *types.DriverOptions) (*types.K8SCapabilities, error) {
-	logrus.Info("[TESTING] GetK8SCapabilities")
+	logrus.Info("[DEBUG] GetK8SCapabilities")
 	// state, err := getStateFromOpts(options)
 	// if err != nil {
 	// 	return nil, err
@@ -583,7 +611,7 @@ func (d *Driver) GetK8SCapabilities(ctx context.Context, options *types.DriverOp
 
 // SetDriverOptions implements driver interface
 func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
-	logrus.Infof("[TESTING] getStateFromOpts")
+	logrus.Infof("[DEBUG] getStateFromOpts")
 	d := state{}
 	d.Name = options.GetValueFromDriverOptions(driverOptions, types.StringType, "name").(string)
 	d.Endpoint = options.GetValueFromDriverOptions(driverOptions, types.StringType, "endpoint").(string)
@@ -611,6 +639,7 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.VMNetwork = options.GetValueFromDriverOptions(driverOptions, types.StringType, "vmnetwork").(string)
 	d.Image = options.GetValueFromDriverOptions(driverOptions, types.StringType, "image").(string)
 	d.Cluster = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cluster").(string)
+	d.KarbonVersion = options.GetValueFromDriverOptions(driverOptions, types.StringType, "karbonversion").(string)
 
 	logrus.Info("-----")
 	utils.PrintToJSON(d, "D")
@@ -619,7 +648,7 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 }
 
 func (s *state) validate() error {
-	logrus.Infof("[TESTING] validate")
+	logrus.Infof("[DEBUG] validate")
 	// if s.ProjectID == "" {
 	// 	return fmt.Errorf("project ID is required")
 	// } else if s.Zone == "" {
@@ -660,7 +689,7 @@ func UpdateStateWithUUIDs(client *v3.Client, state *state) error {
 }
 
 func storeState(info *types.ClusterInfo, state state) error {
-	logrus.Infof("[TESTING] storeState")
+	logrus.Infof("[DEBUG] storeState")
 	bytes, err := json.Marshal(state)
 	if err != nil {
 		return err
@@ -675,7 +704,7 @@ func storeState(info *types.ClusterInfo, state state) error {
 }
 
 func getState(info *types.ClusterInfo) (state, error) {
-	logrus.Infof("[TESTING] getState")
+	logrus.Infof("[DEBUG] getState")
 	state := state{}
 	// ignore error
 	err := json.Unmarshal([]byte(info.Metadata["state"]), &state)
@@ -683,7 +712,7 @@ func getState(info *types.ClusterInfo) (state, error) {
 }
 
 // func (d *Driver) generateClusterCreateRequest(state state) *raw.CreateClusterRequest {
-// 	logrus.Infof("[TESTING] generateClusterCreateRequest")
+// 	logrus.Infof("[DEBUG] generateClusterCreateRequest")
 // 	request := raw.CreateClusterRequest{
 // 		Cluster: &raw.Cluster{
 // 			NodePools: []*raw.NodePool{},
@@ -751,7 +780,7 @@ func getState(info *types.ClusterInfo) (state, error) {
 // }
 
 // func (d *Driver) getServiceClient(ctx context.Context, state state) (*raw.Service, error) {
-// 	logrus.Infof("[TESTING] getServiceClient")
+// 	logrus.Infof("[DEBUG] getServiceClient")
 // 	// The google SDK has no sane way to pass in a TokenSource give all the different types (user, service account, etc)
 // 	// So we actually set an environment variable and then unset it
 // 	EnvMutex.Lock()
@@ -806,7 +835,7 @@ func getState(info *types.ClusterInfo) (state, error) {
 // }
 
 func getClientset(cluster *raw.Cluster) (kubernetes.Interface, error) {
-	logrus.Infof("[TESTING] getClientset")
+	logrus.Infof("[DEBUG] getClientset")
 	capem, err := base64.StdEncoding.DecodeString(cluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
 		return nil, err
@@ -833,7 +862,7 @@ func getClientset(cluster *raw.Cluster) (kubernetes.Interface, error) {
 }
 
 func generateServiceAccountTokenForGke(cluster *raw.Cluster) (string, error) {
-	logrus.Infof("[TESTING] generateServiceAccountTokenForGke")
+	logrus.Infof("[DEBUG] generateServiceAccountTokenForGke")
 	clientset, err := getClientset(cluster)
 	if err != nil {
 		return "", err
@@ -843,7 +872,7 @@ func generateServiceAccountTokenForGke(cluster *raw.Cluster) (string, error) {
 }
 
 func (d *Driver) waitCluster(ctx context.Context, svc *raw.Service, state *state) error {
-	logrus.Infof("[TESTING] waitCluster")
+	logrus.Infof("[DEBUG] waitCluster")
 	// lastMsg := ""
 	// for {
 	// 	cluster, err := svc.Projects.Zones.Clusters.Get(state.ProjectID, state.Zone, state.Name).Context(ctx).Do()
@@ -864,7 +893,7 @@ func (d *Driver) waitCluster(ctx context.Context, svc *raw.Service, state *state
 }
 
 // func (d *Driver) waitClusterRemoveExp(ctx context.Context, svc *raw.Service, state *state) (*raw.Operation, error) {
-// 	logrus.Infof("[TESTING] waitClwaitClusterRemoveExp")
+// 	logrus.Infof("[DEBUG] waitClwaitClusterRemoveExp")
 // 	var operation *raw.Operation
 // 	var err error
 
@@ -881,7 +910,7 @@ func (d *Driver) waitCluster(ctx context.Context, svc *raw.Service, state *state
 // }
 
 // func (d *Driver) waitNodePool(ctx context.Context, svc *raw.Service, state *state) error {
-// 	logrus.Infof("[TESTING] waitNodePool")
+// 	logrus.Infof("[DEBUG] waitNodePool")
 // 	// lastMsg := ""
 // 	// for {
 // 	// 	nodepool, err := svc.Projects.Zones.Clusters.NodePools.Get(state.ProjectID, state.Zone, state.Name, state.NodePoolID).Context(ctx).Do()
@@ -902,7 +931,7 @@ func (d *Driver) waitCluster(ctx context.Context, svc *raw.Service, state *state
 // }
 
 func (d *Driver) getClusterStats(ctx context.Context, info *types.ClusterInfo) (*raw.Cluster, error) {
-	logrus.Infof("[TESTING] getClusterStats")
+	logrus.Infof("[DEBUG] getClusterStats")
 	// state, err := getState(info)
 
 	// if err != nil {
@@ -926,7 +955,7 @@ func (d *Driver) getClusterStats(ctx context.Context, info *types.ClusterInfo) (
 }
 
 func (d *Driver) updateAndWait(ctx context.Context, info *types.ClusterInfo, updateRequest *raw.UpdateClusterRequest) error {
-	logrus.Info("[TESTING] updateAndWait")
+	logrus.Info("[DEBUG] updateAndWait")
 	// cluster, err := d.getClusterStats(ctx, info)
 
 	// if err != nil {

@@ -72,14 +72,14 @@ type Service interface {
 	UpdateProject(uuid string, body *Project) (*Project, error)
 	DeleteProject(uuid string) error
 
-	// GetKarbonCluster(uuid string) (*KarbonClusterIntentResponse, error)
+	// karbon v2.0
 	ListKarbonClusters(getEntitiesRequest *DSMetadata) (*KarbonClusterListIntentResponse, error)
 	CreateKarbonCluster(createRequest *KarbonClusterIntentInput) (*KarbonClusterActionResponse, error)
 	GetKarbonCluster(uuid string) (*KarbonClusterIntentResponse, error)
 	DeleteKarbonCluster(uuid string) (*KarbonClusterActionResponse, error)
 	GetKubeConfigForKarbonCluster(uuid string) (*KarbonClusterKubeconfigResponse, error)
-	ScaleUpKarbonCluster(karbonClusterIntentResponse *KarbonClusterIntentResponse, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error)
-	ScaleDownKarbonCluster(karbonClusterIntentResponse *KarbonClusterIntentResponse, amountOfNodes int64) (*[]KarbonClusterActionResponse, error)
+	ScaleUpKarbonCluster(karbonClusterUUID string, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error)
+	ScaleDownKarbonCluster(karbonClusterUUID string, workers []string, amountOfNodes int64) (*[]KarbonClusterActionResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1397,10 +1397,10 @@ func (op Operations) GetKubeConfigForKarbonCluster(uuid string) (*KarbonClusterK
 	return karbonClusterKubeconfigResponse, op.client.Do(ctx, req, karbonClusterKubeconfigResponse)
 }
 
-func (op Operations) ScaleUpKarbonCluster(karbonClusterIntentResponse *KarbonClusterIntentResponse, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error) {
+func (op Operations) ScaleUpKarbonCluster(karbonClusterUUID string, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s/workers", *karbonClusterIntentResponse.UUID)
+	path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s/workers", karbonClusterUUID)
 	req, err := op.client.NewRequestBasePath(ctx, http.MethodPost, path, scaleUpRequest, "")
 	karbonClusterActionResponse := new(KarbonClusterActionResponse)
 
@@ -1411,14 +1411,13 @@ func (op Operations) ScaleUpKarbonCluster(karbonClusterIntentResponse *KarbonClu
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op Operations) ScaleDownKarbonCluster(karbonClusterIntentResponse *KarbonClusterIntentResponse, amountOfNodes int64) (*[]KarbonClusterActionResponse, error) {
+func (op Operations) ScaleDownKarbonCluster(karbonClusterUUID string, workers []string, amountOfNodes int64) (*[]KarbonClusterActionResponse, error) {
 	ctx := context.TODO()
 	karbonClusterActionResponseList := make([]KarbonClusterActionResponse, 0)
-	fmt.Printf("Created empty list \n")
-	for i := 0; i < int(amountOfNodes); i++ {
+	for i := 0; i < int(len(workers)); i++ {
 		fmt.Printf("loopig nodes \n")
-		worker := karbonClusterIntentResponse.K8sConfig.Workers[i]
-		path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s/workers/%s", *karbonClusterIntentResponse.UUID, *worker.Name)
+		worker := workers[i]
+		path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s/workers/%s", karbonClusterUUID, worker)
 		req, err := op.client.NewRequestBasePath(ctx, http.MethodDelete, path, nil, "")
 		if err != nil {
 			return nil, err
