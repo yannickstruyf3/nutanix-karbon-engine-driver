@@ -5,9 +5,9 @@ Kontainer Engine Karbon Driver
 
 **Note**: This is NOT a Nutanix supported plugin.
 
-**Note**: The Karbon API's (2.0) used in this version are NOT supported.
+**Note**: The plugin works for both Karbon 2.0 and Karbon 2.1.
 
-This document will describe how to use the Rancher Kontainer Engine Karbon Driver. This custom driver has been written for Nutanix Karbon 2.0 (version for 2.1 will follow). 
+This document will describe how to use the Rancher Kontainer Engine Karbon Driver. This custom driver has been written for Nutanix Karbon 2.0 and 2.1. 
 This driver will add Nutanix Karbon as a hosted Kubernetes provider to your Rancher instance.
 
 The UI plugin code can be found here:
@@ -17,7 +17,7 @@ Special thanks to https://github.com/tuxtof for showing me the customization pos
 
 # Prerequisites
 * Have working Rancher 2.0 installation
-* Karbon 2.0 enabled on Prism Central
+* Karbon 2.0/2.1 enabled on Prism Central
 * Optional: use a webserver for hosting the UI files
 
 For the steps on how to host the UI on your own webserver, please go to following link and refer to the `Building` section: 

@@ -73,11 +73,19 @@ type Service interface {
 	DeleteProject(uuid string) error
 
 	// karbon v2.0
-	ListKarbonClusters(getEntitiesRequest *DSMetadata) (*KarbonClusterListIntentResponse, error)
-	CreateKarbonCluster(createRequest *KarbonClusterIntentInput) (*KarbonClusterActionResponse, error)
-	GetKarbonCluster(uuid string) (*KarbonClusterIntentResponse, error)
-	DeleteKarbonCluster(uuid string) (*KarbonClusterActionResponse, error)
-	GetKubeConfigForKarbonCluster(uuid string) (*KarbonClusterKubeconfigResponse, error)
+	ListKarbonClusters20(getEntitiesRequest *DSMetadata) (*KarbonCluster20ListIntentResponse, error)
+	CreateKarbonCluster20(createRequest *KarbonCluster20IntentInput) (*KarbonClusterActionResponse, error)
+	GetKarbonCluster20(uuid string) (*KarbonCluster20IntentResponse, error)
+	DeleteKarbonCluster20(uuid string) (*KarbonClusterActionResponse, error)
+	GetKubeConfigForKarbonCluster20(uuid string) (*KarbonCluster20KubeconfigResponse, error)
+	// karbon v2.1
+	ListKarbonClusters21() (*KarbonCluster21ListIntentResponse, error)
+	CreateKarbonCluster21(createRequest *KarbonCluster21IntentInput) (*KarbonClusterActionResponse, error)
+	GetKarbonCluster21(name string) (*KarbonCluster21IntentResponse, error)
+	GetKarbonCluster21NodePool(name string, nodePoolName string) (*KarbonCluster21NodePoolIntentResponse, error)
+	DeleteKarbonCluster21(name string) (*KarbonClusterActionResponse, error)
+	GetKubeConfigForKarbonCluster21(name string) (*KarbonCluster21KubeconfigResponse, error)
+	// karbon shared
 	ScaleUpKarbonCluster(karbonClusterUUID string, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error)
 	ScaleDownKarbonCluster(karbonClusterUUID string, workers []string, amountOfNodes int64) (*[]KarbonClusterActionResponse, error)
 }
@@ -1306,33 +1314,23 @@ func (op Operations) DeleteProject(uuid string) error {
 	return op.client.Do(ctx, req, nil)
 }
 
-//KARBON
-/*ListVM Get a list of VMs This operation gets a list of VMs, allowing for sorting and pagination. Note: Entities that have not been created
- * successfully are not listed.
- *
- * @param getEntitiesRequest @return *VmListIntentResponse
- */
-func (op Operations) ListKarbonClusters(getEntitiesRequest *DSMetadata) (*KarbonClusterListIntentResponse, error) {
+//KARBON 2.0
+
+func (op Operations) ListKarbonClusters20(getEntitiesRequest *DSMetadata) (*KarbonCluster20ListIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := "/karbon/acs/k8s/cluster/list"
 	req, err := op.client.NewRequestBasePath(ctx, http.MethodPost, path, getEntitiesRequest, "")
-	karbonClusterListIntentResponse := new(KarbonClusterListIntentResponse)
+	karbonCluster20ListIntentResponse := new(KarbonCluster20ListIntentResponse)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return karbonClusterListIntentResponse, op.client.Do(ctx, req, karbonClusterListIntentResponse)
+	return karbonCluster20ListIntentResponse, op.client.Do(ctx, req, karbonCluster20ListIntentResponse)
 }
 
-/*CreateKarbonCluster Creates a Karbon cluser
- * This operation submits a request to create a Karbon clusters based on the input parameters.
- *
- * @param body
- * @return *KarbonClusterIntentResponse
- */
-func (op Operations) CreateKarbonCluster(createRequest *KarbonClusterIntentInput) (*KarbonClusterActionResponse, error) {
+func (op Operations) CreateKarbonCluster20(createRequest *KarbonCluster20IntentInput) (*KarbonClusterActionResponse, error) {
 	ctx := context.TODO()
 
 	path := "/karbon/acs/k8s/cluster"
@@ -1346,28 +1344,22 @@ func (op Operations) CreateKarbonCluster(createRequest *KarbonClusterIntentInput
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op Operations) GetKarbonCluster(uuid string) (*KarbonClusterIntentResponse, error) {
+func (op Operations) GetKarbonCluster20(uuid string) (*KarbonCluster20IntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s", uuid)
 
 	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
-	karbonClusterIntentResponse := new(KarbonClusterIntentResponse)
+	karbonCluster20IntentResponse := new(KarbonCluster20IntentResponse)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return karbonClusterIntentResponse, op.client.Do(ctx, req, karbonClusterIntentResponse)
+	return karbonCluster20IntentResponse, op.client.Do(ctx, req, karbonCluster20IntentResponse)
 }
 
-/*DeleteKarbonCluster Deletes a Karbon cluster
- * This operation submits a request to delete a op.
- *
- * @param uuid The uuid of the entity.
- * @return error
- */
-func (op Operations) DeleteKarbonCluster(uuid string) (*KarbonClusterActionResponse, error) {
+func (op Operations) DeleteKarbonCluster20(uuid string) (*KarbonClusterActionResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s", uuid)
@@ -1382,13 +1374,13 @@ func (op Operations) DeleteKarbonCluster(uuid string) (*KarbonClusterActionRespo
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op Operations) GetKubeConfigForKarbonCluster(uuid string) (*KarbonClusterKubeconfigResponse, error) {
+func (op Operations) GetKubeConfigForKarbonCluster20(uuid string) (*KarbonCluster20KubeconfigResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/karbon/acs/k8s/cluster/%s/kubeconfig", uuid)
 
 	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
-	karbonClusterKubeconfigResponse := new(KarbonClusterKubeconfigResponse)
+	karbonClusterKubeconfigResponse := new(KarbonCluster20KubeconfigResponse)
 
 	if err != nil {
 		return nil, err
@@ -1396,6 +1388,99 @@ func (op Operations) GetKubeConfigForKarbonCluster(uuid string) (*KarbonClusterK
 
 	return karbonClusterKubeconfigResponse, op.client.Do(ctx, req, karbonClusterKubeconfigResponse)
 }
+
+// karbon 2.1
+
+func (op Operations) ListKarbonClusters21() (*KarbonCluster21ListIntentResponse, error) {
+	log.Printf("pre request")
+	ctx := context.TODO()
+	log.Printf("pre request")
+	path := "/karbon/v1-beta.1/k8s/clusters"
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
+	karbonCluster21ListIntentResponse := new(KarbonCluster21ListIntentResponse)
+	log.Printf("post request")
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonCluster21ListIntentResponse, op.client.Do(ctx, req, karbonCluster21ListIntentResponse)
+}
+
+func (op Operations) CreateKarbonCluster21(createRequest *KarbonCluster21IntentInput) (*KarbonClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := "/karbon/v1/k8s/clusters"
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodPost, path, createRequest, "")
+	karbonClusterActionResponse := new(KarbonClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op Operations) GetKarbonCluster21(name string) (*KarbonCluster21IntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/karbon/v1/k8s/clusters/%s", name)
+	fmt.Printf("Path: %s", path)
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
+	karbonCluster21IntentResponse := new(KarbonCluster21IntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonCluster21IntentResponse, op.client.Do(ctx, req, karbonCluster21IntentResponse)
+}
+
+func (op Operations) GetKarbonCluster21NodePool(name string, nodePoolName string) (*KarbonCluster21NodePoolIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/karbon/v1-beta.1/k8s/clusters/%s/node-pools/%s", name, nodePoolName)
+
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
+	karbonCluster21NodePoolIntentResponse := new(KarbonCluster21NodePoolIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonCluster21NodePoolIntentResponse, op.client.Do(ctx, req, karbonCluster21NodePoolIntentResponse)
+}
+
+func (op Operations) DeleteKarbonCluster21(name string) (*KarbonClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/karbon/v1/k8s/clusters/%s", name)
+
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodDelete, path, nil, "")
+	karbonClusterActionResponse := new(KarbonClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op Operations) GetKubeConfigForKarbonCluster21(name string) (*KarbonCluster21KubeconfigResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/kubeconfig", name)
+
+	req, err := op.client.NewRequestBasePath(ctx, http.MethodGet, path, nil, "")
+	karbonClusterKubeconfigResponse := new(KarbonCluster21KubeconfigResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterKubeconfigResponse, op.client.Do(ctx, req, karbonClusterKubeconfigResponse)
+}
+
+//karbon shared
 
 func (op Operations) ScaleUpKarbonCluster(karbonClusterUUID string, scaleUpRequest *KarbonClusterScaleUpIntentInput) (*KarbonClusterActionResponse, error) {
 	ctx := context.TODO()

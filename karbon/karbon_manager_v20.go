@@ -11,7 +11,7 @@ import (
 
 type karbonManagerv20 struct {
 	Client         *v3.Client
-	KarbonClusters map[string]*v3.KarbonClusterIntentResponse
+	KarbonClusters map[string]*v3.KarbonCluster20IntentResponse
 }
 
 func (km karbonManagerv20) ScaleDownKarbonCluster(karbonClusterInfo KarbonClusterInfo, amountOfNodes int64) error {
@@ -69,16 +69,16 @@ func (km karbonManagerv20) ScaleUpKarbonCluster(karbonClusterInfo KarbonClusterI
 	return nil
 }
 
-func (km karbonManagerv20) GetKarbonCluster(karbonClusterUUID string) (*v3.KarbonClusterIntentResponse, error) {
+func (km karbonManagerv20) GetKarbonCluster(karbonClusterUUID string) (*v3.KarbonCluster20IntentResponse, error) {
 	if karbonCluster, ok := km.KarbonClusters[karbonClusterUUID]; ok {
 		return karbonCluster, nil
 	}
-	karbonCluster, err := km.Client.V3.GetKarbonCluster(karbonClusterUUID)
+	karbonCluster, err := km.Client.V3.GetKarbonCluster20(karbonClusterUUID)
 	if err != nil {
 		return nil, fmt.Errorf("Error occured getting karbon cluster")
 	}
 	if km.KarbonClusters == nil {
-		km.KarbonClusters = map[string]*v3.KarbonClusterIntentResponse{
+		km.KarbonClusters = map[string]*v3.KarbonCluster20IntentResponse{
 			karbonClusterUUID: karbonCluster,
 		}
 	} else {
@@ -100,7 +100,7 @@ func (km karbonManagerv20) GetClient() *v3.Client {
 }
 
 func (km karbonManagerv20) DeleteKarbonCluster(karbonClusterInfo KarbonClusterInfo) error {
-	clusterDeleteResponse, err := km.Client.V3.DeleteKarbonCluster(karbonClusterInfo.UUID)
+	clusterDeleteResponse, err := km.Client.V3.DeleteKarbonCluster20(karbonClusterInfo.UUID)
 	if err != nil {
 		return fmt.Errorf("Error occured getting karbon cluster")
 	}
@@ -112,8 +112,6 @@ func (km karbonManagerv20) DeleteKarbonCluster(karbonClusterInfo KarbonClusterIn
 }
 
 func (km karbonManagerv20) RequestKarbonCluster(karbonClusterRequest *KarbonClusterRequest, WaitCompletion bool) (string, error) {
-	fmt.Printf("karbonClusterRequest.Name")
-	fmt.Printf(karbonClusterRequest.Name)
 	workerNodes, err := km.GenerateNodeSlice(karbonClusterRequest.AmountOfWorkerNodes, karbonClusterRequest.ImageUUID, karbonClusterRequest.WorkerCPU, karbonClusterRequest.WorkerDiskMib, karbonClusterRequest.WorkerMemoryMib)
 	if err != nil {
 		fmt.Printf("Error RequestKarbonCluster when generating Node slice %s", err)
@@ -121,17 +119,17 @@ func (km karbonManagerv20) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 	}
 
 	utils.PrintToJSON(workerNodes, "Workernodes ")
-	karbon_cluster := &v3.KarbonClusterIntentInput{
+	karbon_cluster := &v3.KarbonCluster20IntentInput{
 		Name:        karbonClusterRequest.Name,
 		Description: karbonClusterRequest.Description,
 		VMNetwork:   karbonClusterRequest.VMNetworkUUID,
-		K8sConfig: v3.KarbonClusterK8sConfigIntentInput{
+		K8sConfig: v3.KarbonCluster20K8sConfigIntentInput{
 			ServiceClusterIPRange: karbonClusterRequest.ServiceClusterIPRange,
 			NetworkCidr:           karbonClusterRequest.NetworkCidr,
 			Workers:               workerNodes,
-			Masters: []v3.KarbonClusterNodeIntentInput{
-				v3.KarbonClusterNodeIntentInput{
-					ResourceConfig: v3.KarbonClusterNodeResourceConfigIntentInput{
+			Masters: []v3.KarbonCluster20NodeIntentInput{
+				v3.KarbonCluster20NodeIntentInput{
+					ResourceConfig: v3.KarbonCluster20NodeResourceConfigIntentInput{
 						CPU:       karbonClusterRequest.MasterCPU,
 						DiskMib:   karbonClusterRequest.MasterDiskMib,
 						Image:     karbonClusterRequest.ImageUUID,
@@ -144,14 +142,14 @@ func (km karbonManagerv20) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 			Version:             karbonClusterRequest.Version,
 		},
 		ClusterRef: karbonClusterRequest.ClusterUUID,
-		LoggingConfig: v3.KarbonClusterLoggingConfigIntentInput{
+		LoggingConfig: v3.KarbonCluster20LoggingConfigIntentInput{
 			EnableAppLogging: true,
 		},
-		StorageClassConfig: v3.KarbonClusterStorageClassConfigIntentInput{
-			Metadata: v3.KarbonClusterStorageClassConfigMetadataIntentInput{Name: "default-storageclass"},
-			Spec: v3.KarbonClusterStorageClassConfigSpecIntentInput{
+		StorageClassConfig: v3.KarbonCluster20StorageClassConfigIntentInput{
+			Metadata: v3.KarbonCluster20StorageClassConfigMetadataIntentInput{Name: "default-storageclass"},
+			Spec: v3.KarbonCluster20StorageClassConfigSpecIntentInput{
 				ReclaimPolicy: karbonClusterRequest.ReclaimPolicy,
-				SCVolumeSpec: v3.KarbonClusterStorageClassConfigVolumesSpecIntentInput{
+				SCVolumeSpec: v3.KarbonCluster20StorageClassConfigVolumesSpecIntentInput{
 					ClusterRef:       karbonClusterRequest.ClusterUUID,
 					User:             karbonClusterRequest.ClusterUser,
 					Password:         karbonClusterRequest.ClusterPassword,
@@ -161,11 +159,11 @@ func (km karbonManagerv20) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 				},
 			},
 		},
-		EtcdConfig: v3.KarbonClusterEtcdConfigIntentInput{
+		EtcdConfig: v3.KarbonCluster20EtcdConfigIntentInput{
 			NumInstances: 1,
-			Nodes: []v3.KarbonClusterNodeIntentInput{
-				v3.KarbonClusterNodeIntentInput{
-					ResourceConfig: v3.KarbonClusterNodeResourceConfigIntentInput{
+			Nodes: []v3.KarbonCluster20NodeIntentInput{
+				v3.KarbonCluster20NodeIntentInput{
+					ResourceConfig: v3.KarbonCluster20NodeResourceConfigIntentInput{
 						CPU:       karbonClusterRequest.EtcdCPU,
 						DiskMib:   karbonClusterRequest.EtcdDiskMib,
 						Image:     karbonClusterRequest.ImageUUID,
@@ -175,7 +173,7 @@ func (km karbonManagerv20) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 			},
 		},
 	}
-	createClusterResponse, err := km.Client.V3.CreateKarbonCluster(karbon_cluster)
+	createClusterResponse, err := km.Client.V3.CreateKarbonCluster20(karbon_cluster)
 	if err != nil {
 		return "", fmt.Errorf("Error occured during cluster creation:\n %s", err)
 	}
@@ -205,7 +203,7 @@ func (km karbonManagerv20) GetKubeConfigForCluster(karbonClusterInfo KarbonClust
 }
 
 func (km karbonManagerv20) GetKubeConfigStringForCluster(client *v3.Client, ClusterUUID string) (string, error) {
-	kubeconfigResponse, err := client.V3.GetKubeConfigForKarbonCluster(ClusterUUID)
+	kubeconfigResponse, err := client.V3.GetKubeConfigForKarbonCluster20(ClusterUUID)
 	if err != nil {
 		return "", err
 	}
@@ -213,14 +211,14 @@ func (km karbonManagerv20) GetKubeConfigStringForCluster(client *v3.Client, Clus
 	return string(kubeconfig), nil
 }
 
-func (km karbonManagerv20) GenerateNodeSlice(AmountOfNodes int64, Image string, CPU int64, DiskMib int64, MemoryMib int64) ([]v3.KarbonClusterNodeIntentInput, error) {
-	var nodeList []v3.KarbonClusterNodeIntentInput
+func (km karbonManagerv20) GenerateNodeSlice(AmountOfNodes int64, Image string, CPU int64, DiskMib int64, MemoryMib int64) ([]v3.KarbonCluster20NodeIntentInput, error) {
+	var nodeList []v3.KarbonCluster20NodeIntentInput
 	if AmountOfNodes < 1 {
 		return nil, fmt.Errorf("Amount of Nodes must be >0")
 	}
 	for i := 0; i < int(AmountOfNodes); i++ {
-		nodeList = append(nodeList, v3.KarbonClusterNodeIntentInput{
-			ResourceConfig: v3.KarbonClusterNodeResourceConfigIntentInput{
+		nodeList = append(nodeList, v3.KarbonCluster20NodeIntentInput{
+			ResourceConfig: v3.KarbonCluster20NodeResourceConfigIntentInput{
 				CPU:       CPU,
 				DiskMib:   DiskMib,
 				Image:     Image,

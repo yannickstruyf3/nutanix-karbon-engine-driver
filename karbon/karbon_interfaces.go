@@ -13,6 +13,7 @@ type KarbonClusterRequest struct {
 	VMNetworkUUID         string
 	ServiceClusterIPRange string
 	NetworkCidr           string
+	Image                 string
 	ImageUUID             string
 	AmountOfWorkerNodes   int64
 	WorkerCPU             int64
@@ -42,7 +43,7 @@ type KarbonClusterInfo struct {
 }
 
 type KarbonManager interface {
-	// GetKarbonCluster(karbonClusterInfo KarbonClusterInfo) (*v3.KarbonClusterIntentResponse, error)
+	// GetKarbonCluster(karbonClusterInfo KarbonClusterInfo) (*v3.KarbonCluster20IntentResponse, error)
 	GetClient() *v3.Client
 	GetAmountOfWorkerNodes(karbonClusterInfo KarbonClusterInfo) (int64, error)
 	DeleteKarbonCluster(karbonClusterInfo KarbonClusterInfo) error
@@ -60,6 +61,11 @@ func NewKarbonManager(credentials client.Credentials, KarbonVersion string) (Kar
 	}
 	if KarbonVersion == "2.0" {
 		return &karbonManagerv20{
+			Client: client,
+		}, nil
+	}
+	if KarbonVersion == "2.1" {
+		return &karbonManagerv21{
 			Client: client,
 		}, nil
 	}

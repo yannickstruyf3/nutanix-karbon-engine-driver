@@ -274,6 +274,7 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 		OSFlavor:              "centos7.5.1804",
 		Version:               state.Version,
 		ImageUUID:             state.ImageUUID,
+		Image:                 state.Image,
 		AmountOfWorkerNodes:   state.AmountOfWorkerNodes,
 		WorkerCPU:             state.WorkerCPU,
 		WorkerDiskMib:         state.WorkerDiskMib,
@@ -340,16 +341,21 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 	// currentAmountOfWorkerNodes := state.AmountOfWorkerNodes
 	// state.KarbonClusterUUID
 	newAmountOfWorkerNodes := newState.AmountOfWorkerNodes
-	currentAmountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(state.KarbonClusterUUID)
+	karbonClusterInfo := KarbonClusterInfo{
+		Name: state.DisplayName,
+		UUID: state.KarbonClusterUUID,
+	}
+	currentAmountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(karbonClusterInfo)
 	if err != nil {
 		return nil, err
 	}
+
 	logrus.Infof("[DEBUG] update currentAmountOfWorkerNodes %d", currentAmountOfWorkerNodes)
 	logrus.Infof("[DEBUG] update newAmountOfWorkerNodes %d", newAmountOfWorkerNodes)
 	if currentAmountOfWorkerNodes > newAmountOfWorkerNodes {
 		amount := currentAmountOfWorkerNodes - newAmountOfWorkerNodes
 		logrus.Infof("[DEBUG] scaling down by nodes %d", amount)
-		err = karbonManager.ScaleDownKarbonCluster(state.KarbonClusterUUID, amount)
+		err = karbonManager.ScaleDownKarbonCluster(karbonClusterInfo, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -357,7 +363,7 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 	if currentAmountOfWorkerNodes < newAmountOfWorkerNodes {
 		amount := newAmountOfWorkerNodes - currentAmountOfWorkerNodes
 		logrus.Infof("[DEBUG] scaling up by nodes %d", amount)
-		err = karbonManager.ScaleUpKarbonCluster(state.KarbonClusterUUID, amount)
+		err = karbonManager.ScaleUpKarbonCluster(karbonClusterInfo, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -385,17 +391,20 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 			true,
 			"",
 		}, state.KarbonVersion)
-
-	kubeconfig, err := karbonManager.GetKubeConfigForCluster(state.KarbonClusterUUID)
+	karbonClusterInfo := KarbonClusterInfo{
+		Name: state.DisplayName,
+		UUID: state.KarbonClusterUUID,
+	}
+	kubeconfig, err := karbonManager.GetKubeConfigForCluster(karbonClusterInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	amountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(state.KarbonClusterUUID)
+	amountOfWorkerNodes, err := karbonManager.GetAmountOfWorkerNodes(karbonClusterInfo)
 	if err != nil {
 		return nil, err
 	}
-	version, err := karbonManager.GetKubernetesVersion(state.KarbonClusterUUID)
+	version, err := karbonManager.GetKubernetesVersion(karbonClusterInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -433,8 +442,12 @@ func (d *Driver) Remove(ctx context.Context, info *types.ClusterInfo) error {
 			true,
 			"",
 		}, state.KarbonVersion)
+	karbonClusterInfo := KarbonClusterInfo{
+		Name: state.DisplayName,
+		UUID: state.KarbonClusterUUID,
+	}
 	logrus.Infof("[DEBUG]Deleting cluster ")
-	karbonManager.DeleteKarbonCluster(state.KarbonClusterUUID)
+	karbonManager.DeleteKarbonCluster(karbonClusterInfo)
 	logrus.Infof("[DEBUG]Done cluster ")
 	return nil
 }

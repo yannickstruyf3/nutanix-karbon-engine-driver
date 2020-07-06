@@ -1,53 +1,53 @@
 package v3
 
-//KARBON
+//KARBON v2.0 api
 ///Responses
-type KarbonClusterListIntentResponse []KarbonClusterClusterMetadataIntentResponse
+type KarbonCluster20ListIntentResponse []KarbonCluster20ClusterMetadataIntentResponse
 
 // single element in cluster/list not returning the same /cluster/uuid
-type KarbonClusterClusterMetadataIntentResponse struct {
-	KarbonClusterMetadataResponse *KarbonClusterIntentResponse `json:"cluster_metadata" mapstructure:"cluster_metadata, omitempty"`
-	TaskProgressMessage           *string                      `json:"task_progress_message" mapstructure:"task_progress_message, omitempty"`
-	TaskProgressPercent           *int64                       `json:"task_progress_percent" mapstructure:"task_progress_percent, omitempty"`
-	TaskStatus                    *int64                       `json:"task_status" mapstructure:"task_status, omitempty"`
-	TaskType                      *string                      `json:"task_type" mapstructure:"task_type, omitempty"`
+type KarbonCluster20ClusterMetadataIntentResponse struct {
+	KarbonClusterMetadataResponse *KarbonCluster20IntentResponse `json:"cluster_metadata" mapstructure:"cluster_metadata, omitempty"`
+	TaskProgressMessage           *string                        `json:"task_progress_message" mapstructure:"task_progress_message, omitempty"`
+	TaskProgressPercent           *int64                         `json:"task_progress_percent" mapstructure:"task_progress_percent, omitempty"`
+	TaskStatus                    *int64                         `json:"task_status" mapstructure:"task_status, omitempty"`
+	TaskType                      *string                        `json:"task_type" mapstructure:"task_type, omitempty"`
 }
 
 //return type for /cluster/uuid
 
-type KarbonClusterIntentResponse struct {
-	AddonsConfig *KarbonClusterAddonsConfigResponse `json:"addons_config" mapstructure:"addons_config, omitempty"`
-	EtcdConfig   *KarbonClusterEtcdConfigResponse   `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
-	K8sConfig    *KarbonClusterK8sConfigResponse    `json:"k8s_config" mapstructure:"k8s_config, omitempty"`
-	Name         *string                            `json:"name" mapstructure:"name, omitempty"`
-	UUID         *string                            `json:"uuid" mapstructure:"uuid, omitempty"`
+type KarbonCluster20IntentResponse struct {
+	AddonsConfig *KarbonCluster20AddonsConfigResponse `json:"addons_config" mapstructure:"addons_config, omitempty"`
+	EtcdConfig   *KarbonCluster20EtcdConfigResponse   `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
+	K8sConfig    *KarbonCluster20K8sConfigResponse    `json:"k8s_config" mapstructure:"k8s_config, omitempty"`
+	Name         *string                              `json:"name" mapstructure:"name, omitempty"`
+	UUID         *string                              `json:"uuid" mapstructure:"uuid, omitempty"`
 }
 
-type KarbonClusterAddonsConfigResponse struct {
-	KarbonClusterLoggingConfigResponse `json:"logging_config" mapstructure:"logging_config, omitempty"`
+type KarbonCluster20AddonsConfigResponse struct {
+	KarbonCluster20LoggingConfigResponse `json:"logging_config" mapstructure:"logging_config, omitempty"`
 }
 
-type KarbonClusterLoggingConfigResponse struct {
+type KarbonCluster20LoggingConfigResponse struct {
 	State         *string `json:"state" mapstructure:"state, omitempty"`
 	StorageSizeMb *int64  `json:"storage_size_mib" mapstructure:"storage_size_mib, omitempty"`
 	Version       *string `json:"version" mapstructure:"version, omitempty"`
 }
 
-type KarbonClusterEtcdConfigResponse struct {
-	Name         *string                      `json:"name" mapstructure:"name, omitempty"`
-	Nodes        []*KarbonClusterNodeResponse `json:"nodes" mapstructure:"nodes, omitempty"`
-	NumInstances *int64                       `json:"num_instances" mapstructure:"num_instances, omitempty"`
+type KarbonCluster20EtcdConfigResponse struct {
+	Name         *string                        `json:"name" mapstructure:"name, omitempty"`
+	Nodes        []*KarbonCluster20NodeResponse `json:"nodes" mapstructure:"nodes, omitempty"`
+	NumInstances *int64                         `json:"num_instances" mapstructure:"num_instances, omitempty"`
 }
 
-type KarbonClusterNodeResponse struct {
-	Health         *string                                  `json:"health" mapstructure:"health, omitempty"`
-	Name           *string                                  `json:"name" mapstructure:"name, omitempty"`
-	NodePoolName   *string                                  `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
-	ResourceConfig *KarbonClusterNodeResourceConfigResponse `json:"resource_config" mapstructure:"resource_config, omitempty"`
-	UUID           *string                                  `json:"uuid" mapstructure:"uuid, omitempty"`
+type KarbonCluster20NodeResponse struct {
+	Health         *string                                    `json:"health" mapstructure:"health, omitempty"`
+	Name           *string                                    `json:"name" mapstructure:"name, omitempty"`
+	NodePoolName   *string                                    `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
+	ResourceConfig *KarbonCluster20NodeResourceConfigResponse `json:"resource_config" mapstructure:"resource_config, omitempty"`
+	UUID           *string                                    `json:"uuid" mapstructure:"uuid, omitempty"`
 }
 
-type KarbonClusterNodeResourceConfigResponse struct {
+type KarbonCluster20NodeResourceConfigResponse struct {
 	CPU       *int64  `json:"cpu" mapstructure:"cpu, omitempty"`
 	DiskMib   *int64  `json:"disk_mib" mapstructure:"disk_mib, omitempty"`
 	Image     *string `json:"image" mapstructure:"image, omitempty"`
@@ -55,54 +55,54 @@ type KarbonClusterNodeResourceConfigResponse struct {
 	MemoryMib *int64  `json:"memory_mib" mapstructure:"memory_mib, omitempty"`
 }
 
-type KarbonClusterK8sConfigResponse struct {
-	FQDN                  *string                            `json:"fqdn" mapstructure:"fqdn, omitempty"`
-	MasterConfig          *KarbonClusterMasterConfigResponse `json:"master_config" mapstructure:"master_config, omitempty"`
-	Masters               []*KarbonClusterNodeResponse       `json:"masters" mapstructure:"masters, omitempty"`
-	NetworkCidr           *string                            `json:"network_cidr" mapstructure:"network_cidr, omitempty"`
-	NetworkSubnetLength   *int64                             `json:"network_subnet_len" mapstructure:"network_subnet_len, omitempty"`
-	OSFlavor              *string                            `json:"os_flavor" mapstructure:"os_flavor, omitempty"`
-	ServiceClusterIPRange *string                            `json:"service_cluster_ip_range" mapstructure:"service_cluster_ip_range, omitempty"`
-	Version               *string                            `json:"version" mapstructure:"version, omitempty"`
-	Workers               []*KarbonClusterNodeResponse       `json:"workers" mapstructure:"workers, omitempty"`
+type KarbonCluster20K8sConfigResponse struct {
+	FQDN                  *string                              `json:"fqdn" mapstructure:"fqdn, omitempty"`
+	MasterConfig          *KarbonCluster20MasterConfigResponse `json:"master_config" mapstructure:"master_config, omitempty"`
+	Masters               []*KarbonCluster20NodeResponse       `json:"masters" mapstructure:"masters, omitempty"`
+	NetworkCidr           *string                              `json:"network_cidr" mapstructure:"network_cidr, omitempty"`
+	NetworkSubnetLength   *int64                               `json:"network_subnet_len" mapstructure:"network_subnet_len, omitempty"`
+	OSFlavor              *string                              `json:"os_flavor" mapstructure:"os_flavor, omitempty"`
+	ServiceClusterIPRange *string                              `json:"service_cluster_ip_range" mapstructure:"service_cluster_ip_range, omitempty"`
+	Version               *string                              `json:"version" mapstructure:"version, omitempty"`
+	Workers               []*KarbonCluster20NodeResponse       `json:"workers" mapstructure:"workers, omitempty"`
 }
 
-type KarbonClusterMasterConfigResponse struct {
+type KarbonCluster20MasterConfigResponse struct {
 	DeploymentType *string `json:"deployment_type" mapstructure:"deployment_type, omitempty"`
 	ExternalIP     *string `json:"external_ip" mapstructure:"external_ip, omitempty"`
 }
 
 //Inputs
-type KarbonClusterIntentInput struct {
-	Name               string                                     `json:"name" mapstructure:"name, omitempty"`
-	Description        string                                     `json:"description" mapstructure:"description, omitempty"`
-	VMNetwork          string                                     `json:"vm_network" mapstructure:"vm_network, omitempty"`
-	K8sConfig          KarbonClusterK8sConfigIntentInput          `json:"k8s_config" mapstructure:"k8s_config, omitempty"`
-	ClusterRef         string                                     `json:"cluster_ref" mapstructure:"cluster_ref, omitempty"`
-	LoggingConfig      KarbonClusterLoggingConfigIntentInput      `json:"logging_config" mapstructure:"logging_config, omitempty"`
-	StorageClassConfig KarbonClusterStorageClassConfigIntentInput `json:"storage_class_config" mapstructure:"storage_class_config, omitempty"`
-	EtcdConfig         KarbonClusterEtcdConfigIntentInput         `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
+type KarbonCluster20IntentInput struct {
+	Name               string                                       `json:"name" mapstructure:"name, omitempty"`
+	Description        string                                       `json:"description" mapstructure:"description, omitempty"`
+	VMNetwork          string                                       `json:"vm_network" mapstructure:"vm_network, omitempty"`
+	K8sConfig          KarbonCluster20K8sConfigIntentInput          `json:"k8s_config" mapstructure:"k8s_config, omitempty"`
+	ClusterRef         string                                       `json:"cluster_ref" mapstructure:"cluster_ref, omitempty"`
+	LoggingConfig      KarbonCluster20LoggingConfigIntentInput      `json:"logging_config" mapstructure:"logging_config, omitempty"`
+	StorageClassConfig KarbonCluster20StorageClassConfigIntentInput `json:"storage_class_config" mapstructure:"storage_class_config, omitempty"`
+	EtcdConfig         KarbonCluster20EtcdConfigIntentInput         `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
 }
 
-type KarbonClusterK8sConfigIntentInput struct {
-	ServiceClusterIPRange string                         `json:"service_cluster_ip_range" mapstructure:"service_cluster_ip_range, omitempty"`
-	NetworkCidr           string                         `json:"network_cidr" mapstructure:"network_cidr, omitempty"`
-	FQDN                  string                         `json:"fqdn" mapstructure:"fqdn, omitempty"`
-	Workers               []KarbonClusterNodeIntentInput `json:"workers" mapstructure:"workers, omitempty"`
-	Masters               []KarbonClusterNodeIntentInput `json:"masters" mapstructure:"masters, omitempty"`
-	OSFlavor              string                         `json:"os_flavor" mapstructure:"os_flavor, omitempty"`
-	NetworkSubnetLength   int64                          `json:"network_subnet_len" mapstructure:"network_subnet_len, omitempty"`
-	Version               string                         `json:"version" mapstructure:"version, omitempty"`
+type KarbonCluster20K8sConfigIntentInput struct {
+	ServiceClusterIPRange string                           `json:"service_cluster_ip_range" mapstructure:"service_cluster_ip_range, omitempty"`
+	NetworkCidr           string                           `json:"network_cidr" mapstructure:"network_cidr, omitempty"`
+	FQDN                  string                           `json:"fqdn" mapstructure:"fqdn, omitempty"`
+	Workers               []KarbonCluster20NodeIntentInput `json:"workers" mapstructure:"workers, omitempty"`
+	Masters               []KarbonCluster20NodeIntentInput `json:"masters" mapstructure:"masters, omitempty"`
+	OSFlavor              string                           `json:"os_flavor" mapstructure:"os_flavor, omitempty"`
+	NetworkSubnetLength   int64                            `json:"network_subnet_len" mapstructure:"network_subnet_len, omitempty"`
+	Version               string                           `json:"version" mapstructure:"version, omitempty"`
 }
 
-type KarbonClusterNodeIntentInput struct {
-	Name           string                                     `json:"name" mapstructure:"name, omitempty"`
-	NodePoolName   string                                     `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
-	ResourceConfig KarbonClusterNodeResourceConfigIntentInput `json:"resource_config" mapstructure:"resource_config, omitempty"`
-	UUID           string                                     `json:"uuid" mapstructure:"uuid, omitempty"`
+type KarbonCluster20NodeIntentInput struct {
+	Name           string                                       `json:"name" mapstructure:"name, omitempty"`
+	NodePoolName   string                                       `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
+	ResourceConfig KarbonCluster20NodeResourceConfigIntentInput `json:"resource_config" mapstructure:"resource_config, omitempty"`
+	UUID           string                                       `json:"uuid" mapstructure:"uuid, omitempty"`
 }
 
-type KarbonClusterNodeResourceConfigIntentInput struct {
+type KarbonCluster20NodeResourceConfigIntentInput struct {
 	CPU     int64  `json:"cpu" mapstructure:"cpu, omitempty"`
 	DiskMib int64  `json:"disk_mib" mapstructure:"disk_mib, omitempty"`
 	Image   string `json:"image" mapstructure:"image, omitempty"`
@@ -110,25 +110,25 @@ type KarbonClusterNodeResourceConfigIntentInput struct {
 	MemoryMib int64 `json:"memory_mib" mapstructure:"memory_mib, omitempty"`
 }
 
-type KarbonClusterLoggingConfigIntentInput struct {
+type KarbonCluster20LoggingConfigIntentInput struct {
 	EnableAppLogging bool `json:"enable_app_logging" mapstructure:"enable_app_logging, omitempty"`
 }
 
-type KarbonClusterStorageClassConfigIntentInput struct {
-	Metadata KarbonClusterStorageClassConfigMetadataIntentInput `json:"metadata" mapstructure:"metadata, omitempty"`
-	Spec     KarbonClusterStorageClassConfigSpecIntentInput     `json:"spec" mapstructure:"spec, omitempty"`
+type KarbonCluster20StorageClassConfigIntentInput struct {
+	Metadata KarbonCluster20StorageClassConfigMetadataIntentInput `json:"metadata" mapstructure:"metadata, omitempty"`
+	Spec     KarbonCluster20StorageClassConfigSpecIntentInput     `json:"spec" mapstructure:"spec, omitempty"`
 }
 
-type KarbonClusterStorageClassConfigMetadataIntentInput struct {
+type KarbonCluster20StorageClassConfigMetadataIntentInput struct {
 	Name string `json:"name" mapstructure:"name, omitempty"`
 }
 
-type KarbonClusterStorageClassConfigSpecIntentInput struct {
-	ReclaimPolicy string                                                `json:"reclaim_policy" mapstructure:"reclaim_policy, omitempty"`
-	SCVolumeSpec  KarbonClusterStorageClassConfigVolumesSpecIntentInput `json:"sc_volumes_spec" mapstructure:"sc_volumes_spec, omitempty"`
+type KarbonCluster20StorageClassConfigSpecIntentInput struct {
+	ReclaimPolicy string                                                  `json:"reclaim_policy" mapstructure:"reclaim_policy, omitempty"`
+	SCVolumeSpec  KarbonCluster20StorageClassConfigVolumesSpecIntentInput `json:"sc_volumes_spec" mapstructure:"sc_volumes_spec, omitempty"`
 }
 
-type KarbonClusterStorageClassConfigVolumesSpecIntentInput struct {
+type KarbonCluster20StorageClassConfigVolumesSpecIntentInput struct {
 	ClusterRef       string `json:"cluster_ref" mapstructure:"cluster_ref, omitempty"`
 	User             string `json:"user" mapstructure:"user, omitempty"`
 	Password         string `json:"password" mapstructure:"password, omitempty"`
@@ -137,18 +137,136 @@ type KarbonClusterStorageClassConfigVolumesSpecIntentInput struct {
 	FlashMode        bool   `json:"flash_mode" mapstructure:"flash_mode, omitempty"`
 }
 
-type KarbonClusterEtcdConfigIntentInput struct {
-	NumInstances int64                          `json:"num_instances" mapstructure:"num_instances, omitempty"`
-	Name         string                         `json:"name" mapstructure:"name, omitempty"`
-	Nodes        []KarbonClusterNodeIntentInput `json:"nodes" mapstructure:"nodes, omitempty"`
+type KarbonCluster20EtcdConfigIntentInput struct {
+	NumInstances int64                            `json:"num_instances" mapstructure:"num_instances, omitempty"`
+	Name         string                           `json:"name" mapstructure:"name, omitempty"`
+	Nodes        []KarbonCluster20NodeIntentInput `json:"nodes" mapstructure:"nodes, omitempty"`
 }
 
+//KARBON 2.1
+
+type KarbonCluster21ListIntentResponse []KarbonCluster21IntentResponse
+type KarbonCluster21IntentResponse struct {
+	Name                     string `json:"name" mapstructure:"name, omitempty"`
+	UUID                     string `json:"uuid" mapstructure:"uuid, omitempty"`
+	Status                   string `json:"status" mapstructure:"status, omitempty"`
+	Version                  string `json:"version" mapstructure:"version, omitempty"`
+	KubeApiServerIPv4Address string `json:"kubeapi_server_ipv4_address" mapstructure:"kubeapi_server_ipv4_address, omitempty"`
+	ETCDConfig               struct {
+		NodePools []string `json:"node_pools" mapstructure:"node_pools, omitempty"`
+	} `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
+	MasterConfig struct {
+		DeploymentType string   `json:"deployment_type" mapstructure:"deployment_type, omitempty"`
+		NodePools      []string `json:"node_pools" mapstructure:"node_pools, omitempty"`
+	} `json:"master_config" mapstructure:"master_config, omitempty"`
+	WorkerConfig struct {
+		NodePools []string `json:"node_pools" mapstructure:"node_pools, omitempty"`
+	} `json:"worker_config" mapstructure:"worker_config, omitempty"`
+}
+
+type KarbonCluster21NodePoolIntentResponse struct {
+	AHVConfig     KarbonCluster21NodePoolAHVConfigIntentResponse `json:"ahv_config" mapstructure:"ahv_config, omitempty"`
+	Name          string                                         `json:"name" mapstructure:"name, omitempty"`
+	NodeOSVersion string                                         `json:"node_os_version" mapstructure:"node_os_version, omitempty"`
+	NumInstances  int64                                          `json:"num_instances" mapstructure:"num_instances, omitempty"`
+	Nodes         []KarbonCluster21NodeIntentResponse            `json:"nodes" mapstructure:"nodes, omitempty"`
+}
+
+type KarbonCluster21NodePoolAHVConfigIntentResponse struct {
+	CPU                     *int64  `json:"cpu" mapstructure:"cpu, omitempty"`
+	DiskMib                 *int64  `json:"disk_mib" mapstructure:"disk_mib, omitempty"`
+	MemoryMib               *int64  `json:"memory_mib" mapstructure:"memory_mib, omitempty"`
+	NetworkUUID             *string `json:"network_uuid" mapstructure:"network_uuid, omitempty"`
+	PrismElementClusterUUID *string `json:"prism_element_cluster_uuid" mapstructure:"prism_element_cluster_uuid, omitempty"`
+}
+
+type KarbonCluster21NodeIntentResponse struct {
+	Hostname    *string `json:"hostname" mapstructure:"hostname, omitempty"`
+	IPv4Address *string `json:"ipv4_address" mapstructure:"ipv4_address, omitempty"`
+}
+
+type KarbonCluster21KubeconfigResponse struct {
+	KubeConfig string `json:"kube_config" mapstructure:"kube_config, omitempty"`
+}
+
+//inputs
+type KarbonCluster21IntentInput struct {
+	Name               string                                       `json:"name" mapstructure:"name, omitempty"`
+	Version            string                                       `json:"version" mapstructure:"version, omitempty"`
+	CNIConfig          KarbonCluster21CNIConfigIntentInput          `json:"cni_config" mapstructure:"cni_config, omitempty"`
+	ETCDConfig         KarbonCluster21ETCDConfigIntentInput         `json:"etcd_config" mapstructure:"etcd_config, omitempty"`
+	MastersConfig      KarbonCluster21MasterConfigIntentInput       `json:"masters_config" mapstructure:"masters_config, omitempty"`
+	Metadata           KarbonCluster21MetadataIntentInput           `json:"metadata" mapstructure:"metadata, omitempty"`
+	StorageClassConfig KarbonCluster21StorageClassConfigIntentInput `json:"storage_class_config" mapstructure:"storage_class_config, omitempty"`
+	WorkersConfig      KarbonCluster21WorkerConfigIntentInput       `json:"workers_config" mapstructure:"workers_config, omitempty"`
+}
+type KarbonCluster21MetadataIntentInput struct {
+	APIVersion string `json:"api_version" mapstructure:"api_version, omitempty"`
+}
+
+type KarbonCluster21MasterConfigIntentInput struct {
+	SingleMasterConfig KarbonCluster21SingleMasterConfigIntentInput `json:"single_master_config" mapstructure:"single_master_config, omitempty"`
+	NodePools          []KarbonCluster21NodePoolIntentInput         `json:"node_pools" mapstructure:"node_pools, omitempty"`
+}
+
+type KarbonCluster21SingleMasterConfigIntentInput struct {
+}
+type KarbonCluster21WorkerConfigIntentInput struct {
+	NodePools []KarbonCluster21NodePoolIntentInput `json:"node_pools" mapstructure:"node_pools, omitempty"`
+}
+type KarbonCluster21ETCDConfigIntentInput struct {
+	NodePools []KarbonCluster21NodePoolIntentInput `json:"node_pools" mapstructure:"node_pools, omitempty"`
+}
+
+type KarbonCluster21CNIConfigIntentInput struct {
+	NodeCIDRMaskSize int64                                   `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
+	PodIPv4CIDR      string                                  `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
+	ServiceIPv4CIDR  string                                  `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
+	FlannelConfig    KarbonCluster21FlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+}
+
+type KarbonCluster21FlannelConfigIntentInput struct{}
+
+type KarbonCluster21NodePoolIntentInput struct {
+	AHVConfig     KarbonCluster21NodePoolAHVConfigIntentInput `json:"ahv_config" mapstructure:"ahv_config, omitempty"`
+	Name          string                                      `json:"name" mapstructure:"name, omitempty"`
+	NodeOSVersion string                                      `json:"node_os_version" mapstructure:"node_os_version, omitempty"`
+	NumInstances  int64                                       `json:"num_instances" mapstructure:"num_instances, omitempty"`
+}
+
+type KarbonCluster21NodePoolAHVConfigIntentInput struct {
+	CPU                     int64  `json:"cpu" mapstructure:"cpu, omitempty"`
+	DiskMib                 int64  `json:"disk_mib" mapstructure:"disk_mib, omitempty"`
+	MemoryMib               int64  `json:"memory_mib" mapstructure:"memory_mib, omitempty"`
+	NetworkUUID             string `json:"network_uuid" mapstructure:"network_uuid, omitempty"`
+	PrismElementClusterUUID string `json:"prism_element_cluster_uuid" mapstructure:"prism_element_cluster_uuid, omitempty"`
+}
+
+type KarbonCluster21StorageClassConfigIntentInput struct {
+	DefaultStorageClass bool                                    `json:"default_storage_class" mapstructure:"default_storage_class, omitempty"`
+	Name                string                                  `json:"name" mapstructure:"name, omitempty"`
+	ReclaimPolicy       string                                  `json:"reclaim_policy" mapstructure:"reclaim_policy, omitempty"`
+	VolumesConfig       KarbonCluster21VolumesConfigIntentInput `json:"volumes_config" mapstructure:"volumes_config, omitempty"`
+}
+
+type KarbonCluster21VolumesConfigIntentInput struct {
+	FileSystem              string `json:"file_system" mapstructure:"file_system, omitempty"`
+	FlashMode               bool   `json:"flash_mode" mapstructure:"flash_mode, omitempty"`
+	Password                string `json:"password" mapstructure:"password, omitempty"`
+	PrismElementClusterUUID string `json:"prism_element_cluster_uuid" mapstructure:"prism_element_cluster_uuid, omitempty"`
+	StorageContainer        string `json:"storage_container" mapstructure:"storage_container, omitempty"`
+	Username                string `json:"username" mapstructure:"username, omitempty"`
+}
+
+//KARBON shared
+
 type KarbonClusterActionResponse struct {
+	ClusterName string `json:"cluster_name" mapstructure:"cluster_name, omitempty"`
 	ClusterUUID string `json:"cluster_uuid" mapstructure:"cluster_uuid, omitempty"`
 	TaskUUID    string `json:"task_uuid" mapstructure:"task_uuid, omitempty"`
 }
 
-type KarbonClusterKubeconfigResponse struct {
+type KarbonCluster20KubeconfigResponse struct {
 	ClusterUUID string `json:"cluster_uuid" mapstructure:"cluster_uuid, omitempty"`
 	YmlConfig   string `json:"yml_config" mapstructure:"yml_config, omitempty"`
 }
