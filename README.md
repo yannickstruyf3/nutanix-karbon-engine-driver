@@ -32,10 +32,10 @@ Click `Add Cluster Driver` and fill in the details below.
 
 You can use the pre-compiled binaries and files on following URLs:
 Download URL:
-https://github.com/yannickstruyf3/kontainer-engine-driver-karbon/releases/download/2.0.0/kontainer-engine-driver-karbon-linux-amd64
+https://github.com/yannickstruyf3/kontainer-engine-driver-karbon/releases/download/2.1.0/kontainer-engine-driver-karbon-linux-amd64
 
 Custom UI URL:
-https://github.com/yannickstruyf3/ui-cluster-driver-nutanix/releases/download/2.0.0/component.js
+https://github.com/yannickstruyf3/ui-cluster-driver-nutanix/releases/download/2.1.0/component.js
 
 Whitelist Domains:
 github.com
