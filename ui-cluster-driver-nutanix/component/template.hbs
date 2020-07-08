@@ -1,0 +1,344 @@
+<section class="horizontal-form">
+  <div class="container-fluid"></div>
+  <div class="over-hr r-mt20 r-mb20">
+    <span>Nutanix Prism Central Login details</span>
+  </div>
+
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Prism Central Endpoint</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.endpoint
+        
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Nutanix Prism Central endpoint ip address/FQDN:9440
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Ignore Certificate Validation</label>
+      <div>
+        {{input type="checkbox"
+            class="form-control"
+            checked=cluster.%%DRIVERNAME%%EngineConfig.insecure
+            readonly=(not-eq mode "new")
+      }}
+      </div>
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Prism Central Username</label>
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.username
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Prism Central Password</label>
+
+      {{input type="password"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.password
+           readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <p></p>
+  <div class="over-hr r-mt20 r-mb20">
+    <span>Nutanix Karbon details</span>
+  </div>
+
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static"> Amount of Worker Nodes</label>
+      {{input-integer 
+        min=1 
+        value=cluster.%%DRIVERNAME%%EngineConfig.workernodes 
+        classNames="form-control"
+      }}
+      <p class="help-block">
+        Note: Can be modified during Karbon cluster editing
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Karbon Version</label>
+
+      {{searchable-select class="form-control"
+          content=karbonVersionChoices
+          value=cluster.%%DRIVERNAME%%EngineConfig.karbonversion
+          readonly=(not-eq mode "new")
+      }}
+
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Nutanix Cluster</label>
+
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.cluster
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">VM Network</label>
+
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.vmnetwork
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Karbon Image</label>
+
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.image
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Kubernetes Version</label>
+      {{searchable-select class="form-control"
+        content=versionChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.version
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <p></p>
+  <div class="over-hr r-mt20 r-mb20">
+    <span>Karbon CSI Storage Details</span>
+  </div>
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Prism Element User</label>
+
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.clusteruser
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Prism Element Password</label>
+
+      {{input type="password"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.clusterpassword
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Storage Container</label>
+
+      {{input type="text"
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.storagecontainer
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Filesystem</label>
+
+      {{searchable-select class="form-control"
+          content=filesystemChoices
+          value=cluster.%%DRIVERNAME%%EngineConfig.filesystem
+          readonly=(not-eq mode "new")
+      }}
+
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Reclaim Policy</label>
+      {{searchable-select class="form-control"
+        content=reclaimPolicyChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.reclaimpolicy
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">Flash Mode</label>
+      <div>
+        {{input type="checkbox"
+            class="form-control"
+            checked=cluster.%%DRIVERNAME%%EngineConfig.flashmode
+            readonly=(not-eq mode "new")
+      }}
+      </div>
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  <p></p>
+  <div class="over-hr r-mt20 r-mb20">
+    <span>Karbon Hardware details</span>
+  </div>
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master CPU</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.mastercpu
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master Memory</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.mastermemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master Storage</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterdiskmib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">ETCD CPU</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.etcdcpu
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">ETCD Memory</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.etcdmemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">ETCD Storage</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.etcddiskmib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Worker CPU</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.workercpu
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Worker Memory</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.workermemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Worker Storage</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.workerdiskmib
+            readonly=(not-eq mode "new")
+          }}
+
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+  </div>
+
+
+  {{!-- This component shows errors produced by validate() in the component --}}
+  {{top-errors errors=errors}}
+
+  {{save-cancel save="save" cancel=close}}
+
+</section>

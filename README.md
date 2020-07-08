@@ -10,8 +10,7 @@ Kontainer Engine Karbon Driver
 This document will describe how to use the Rancher Kontainer Engine Karbon Driver. This custom driver has been written for Nutanix Karbon 2.0 and 2.1. 
 This driver will add Nutanix Karbon as a hosted Kubernetes provider to your Rancher instance.
 
-The UI plugin code can be found here:
-	https://github.com/yannickstruyf3/ui-cluster-driver-nutanix
+The UI plugin code can be found in the `ui-cluster-driver-nutanix` folder.
 
 Special thanks to https://github.com/tuxtof for showing me the customization possibilities Rancher has to offer and brainstorming on the idea.
 
@@ -109,7 +108,7 @@ Deleting of the cluster is also supported. Just press `Delete` and confirm the d
 ![alt text](https://github.com/yannickstruyf3/kontainer-engine-driver-karbon/raw/master/images/16_clusterdelete.png " ")
 
 # DIY
-## Building
+## Building Karbon Cluster driver
 
 `make`
 
@@ -119,3 +118,19 @@ via URLs that your Rancher instance can establish a connection to and download
 the driver binaries.  For example, this driver is distributed via a GitHub 
 release and can be downloaded from one of those URLs directly.
 
+## UI Development
+The UI code is located in the `ui-cluster-driver-nutanix` folder.
+
+This package contains a small web-server that will serve up the custom driver UI at `http://localhost:3000/component.js`.  You can run this while developing and point the Rancher settings there.
+* `npm install`
+* `npm start`
+* The driver name can be optionally overridden: `npm start -- --name=DRIVERNAME`
+* The compiled files are viewable at http://localhost:3000.
+
+## UI Building
+
+For other users to see your driver, you need to build it and host the output on a server accessible from their browsers.
+
+* `npm run build`
+* Copy the contents of the `dist` directory onto a webserver.
+  * If your Rancher is configured to use HA or SSL, the server must also be available via HTTPS.
