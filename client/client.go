@@ -11,8 +11,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-
-	"github.com/rancher/kontainer-engine-driver-karbon/utils"
 )
 
 // taken from "github.com/hashicorp/terraform/helper/logging"
@@ -150,10 +148,6 @@ func (c *Client) NewRequestBasePath(ctx context.Context, method, urlStr string, 
 		}
 	}
 
-	fmt.Print("===\n")
-	fmt.Print(u)
-	fmt.Print("===\n")
-	utils.PrintToJSON(body, "[Debug]")
 	req, err := http.NewRequest(method, u.String(), buf)
 
 	if err != nil {

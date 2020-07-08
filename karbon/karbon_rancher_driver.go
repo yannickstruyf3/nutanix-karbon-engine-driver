@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -12,7 +13,6 @@ import (
 	v3 "github.com/rancher/kontainer-engine-driver-karbon/client/v3"
 	"github.com/rancher/kontainer-engine-driver-karbon/utils"
 	"github.com/rancher/kontainer-engine/drivers/options"
-	"github.com/rancher/kontainer-engine/drivers/util"
 	"github.com/rancher/kontainer-engine/types"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -65,8 +65,8 @@ type state struct {
 	FileSystem          string
 	StorageContainer    string
 	KarbonVersion       string
-
-	ClusterInfo types.ClusterInfo
+	FlashMode           bool
+	ClusterInfo         types.ClusterInfo
 }
 
 func NewDriver() types.Driver {
@@ -80,8 +80,6 @@ func NewDriver() types.Driver {
 	driver.driverCapabilities.AddCapability(types.SetVersionCapability)
 	driver.driverCapabilities.AddCapability(types.GetClusterSizeCapability)
 	driver.driverCapabilities.AddCapability(types.SetClusterSizeCapability)
-	// logrus.Debugf("[DEBUG] NewDriver")
-	// logrus.Infof("[DEBUG] NewDriver")
 	return driver
 }
 
@@ -203,9 +201,6 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Usage: "Karbon version",
 	}
 
-	logrus.Info("[DEBUG] END GetDriverCreateOptions ")
-	logrus.Info(driverFlag)
-
 	return &driverFlag, nil
 }
 
@@ -219,21 +214,13 @@ func (d *Driver) GetDriverUpdateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.IntType,
 		Usage: "The node number for your cluster to update. 0 means no updates",
 	}
-	// driverFlag.Options["master-version"] = &types.Flag{
-	// 	Type:  types.StringType,
-	// 	Usage: "The kubernetes master version to update",
-	// }
-	// driverFlag.Options["node-version"] = &types.Flag{
-	// 	Type:  types.StringType,
-	// 	Usage: "The kubernetes node version to update",
-	// }
+
 	return &driverFlag, nil
 }
 
 // Create implements driver interface
 func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types.ClusterInfo) (*types.ClusterInfo, error) {
 
-	logrus.Infof("[DEBUG] Create from module")
 	utils.PrintToJSON(opts, "[DEBUG] Create OPTS: ")
 	utils.PrintToJSON(ctx, "[DEBUG] Create ctx: ")
 	state, err := getStateFromOpts(opts)
@@ -379,7 +366,7 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 		return nil, err
 	}
 
-	utils.PrintToJSON(state, "[PostCheckSTATE] ")
+	utils.PrintToJSON(state, "[DEBUG] PostCheckSTATE: ")
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
 			state.Endpoint,
@@ -417,7 +404,7 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 		return nil, err
 	}
 	info.ServiceAccountToken = serviceAccountToken
-	utils.PrintToJSON(info, "[CLUSTERINFO ] ")
+	utils.PrintToJSON(info, "[DEBUG] CLUSTERINFO: ")
 	return info, nil
 }
 
@@ -426,11 +413,11 @@ func (d *Driver) Remove(ctx context.Context, info *types.ClusterInfo) error {
 	logrus.Infof("[DEBUG]remove")
 	state, err := getState(info)
 	if err != nil {
-		logrus.Infof("[DEBUG]Remove Error occured!!!")
+		logrus.Infof("[DEBUG]Remove Error occured: %s", err)
 		return err
 	}
-	utils.PrintToJSON(info, "[Remove Info] ")
-	utils.PrintToJSON(state, "[Remove STATE] ")
+	utils.PrintToJSON(info, "[DEBUG]Remove Info:	")
+	utils.PrintToJSON(state, "[DEBUG] Remove STATE: ")
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
 			state.Endpoint,
@@ -509,41 +496,10 @@ func (d *Driver) GetClusterSize(ctx context.Context, info *types.ClusterInfo) (*
 }
 
 func (d *Driver) SetClusterSize(ctx context.Context, info *types.ClusterInfo, count *types.NodeCount) error {
-	// cluster, err := d.getClusterStats(ctx, info)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// state, err := getState(info)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// client, err := d.getServiceClient(ctx, state)
-
-	// if err != nil {
-	// 	return err
-	// }
 
 	logrus.Info("[DEBUG] updating cluster size")
 
-	// _, err = client.Projects.Zones.Clusters.NodePools.SetSize(state.ProjectID, state.Zone, cluster.Name, cluster.NodePools[0].Name, &raw.SetNodePoolSizeRequest{
-	// 	NodeCount: count.Count,
-	// }).Context(ctx).Do()
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = d.waitCluster(ctx, client, &state)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	logrus.Info("cluster size updated successfully")
+	logrus.Info("[DEBUG] cluster size updated successfully")
 
 	return nil
 }
@@ -555,30 +511,6 @@ func (d *Driver) GetCapabilities(ctx context.Context) (*types.Capabilities, erro
 
 func (d *Driver) RemoveLegacyServiceAccount(ctx context.Context, info *types.ClusterInfo) error {
 	logrus.Info("[DEBUG] RemoveLegacyServiceAccount")
-	// state, err := getState(info)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// svc, err := d.getServiceClient(ctx, state)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// cluster, err := svc.Projects.Zones.Clusters.Get(state.ProjectID, state.Zone, state.Name).Context(ctx).Do()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// clientset, err := getClientset(cluster)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = util.DeleteLegacyServiceAccountAndRoleBinding(clientset)
-	// if err != nil {
-	// 	return err
-	// }
 
 	return nil
 }
@@ -593,11 +525,7 @@ func (d *Driver) ETCDRestore(ctx context.Context, clusterInfo *types.ClusterInfo
 
 func (d *Driver) GetK8SCapabilities(ctx context.Context, options *types.DriverOptions) (*types.K8SCapabilities, error) {
 	logrus.Info("[DEBUG] GetK8SCapabilities")
-	// state, err := getStateFromOpts(options)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// capabilities := &types.K8SCapabilities{}
+
 	capabilities := &types.K8SCapabilities{
 		L4LoadBalancer: &types.LoadBalancerCapabilities{
 			Enabled:              true,
@@ -606,25 +534,12 @@ func (d *Driver) GetK8SCapabilities(ctx context.Context, options *types.DriverOp
 			HealthCheckSupported: true,
 		},
 	}
-	// if state.EnableHTTPLoadBalancing != nil && *state.EnableHTTPLoadBalancing {
-	// 	capabilities.IngressControllers = []*types.IngressCapabilities{
-	// 		{
-	// 			IngressProvider:      "GCLB",
-	// 			CustomDefaultBackend: true,
-	// 		},
-	// 	}
-	// }
 	return capabilities, nil
-	// return nil, nil
 }
-
-///////////////////////////////////////////////////
-/// Optional
-///////////////////////////////////////////////////
 
 // SetDriverOptions implements driver interface
 func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
-	logrus.Infof("[DEBUG] getStateFromOpts")
+	utils.PrintToJSON(driverOptions, "[DEBUG] getStateFromOpts driverOptions:")
 	d := state{}
 	d.Name = options.GetValueFromDriverOptions(driverOptions, types.StringType, "name").(string)
 	d.Endpoint = options.GetValueFromDriverOptions(driverOptions, types.StringType, "endpoint").(string)
@@ -632,6 +547,7 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.Username = options.GetValueFromDriverOptions(driverOptions, types.StringType, "username").(string)
 	d.Password = options.GetValueFromDriverOptions(driverOptions, types.StringType, "password").(string)
 	d.Insecure = options.GetValueFromDriverOptions(driverOptions, types.BoolType, "insecure").(bool)
+	d.FlashMode = options.GetValueFromDriverOptions(driverOptions, types.BoolType, "flashmode").(bool)
 	d.AmountOfWorkerNodes = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workernodes").(int64)
 
 	d.WorkerCPU = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workercpu").(int64)
@@ -654,29 +570,101 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.Cluster = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cluster").(string)
 	d.KarbonVersion = options.GetValueFromDriverOptions(driverOptions, types.StringType, "karbonversion").(string)
 
-	logrus.Info("-----")
-	utils.PrintToJSON(d, "D")
-	logrus.Info("-----")
+	utils.PrintToJSON(d, "[DEBUG] getStateFromOpts: ")
 	return d, d.validate()
 }
 
 func (s *state) validate() error {
 	logrus.Infof("[DEBUG] validate")
-	// if s.ProjectID == "" {
-	// 	return fmt.Errorf("project ID is required")
-	// } else if s.Zone == "" {
-	// 	return fmt.Errorf("zone is required")
+
 	if s.Name == "" {
-		return fmt.Errorf("cluster name is required")
+		return fmt.Errorf("Karbon cluster name is required")
 	}
+	//Check endpoint
 	if s.Endpoint == "" {
-		return fmt.Errorf("cluster endpoint is required")
+		return fmt.Errorf("Prism Central endpoint is required")
+	}
+	matchedEndpoint, err := regexp.MatchString("^.*:(\\d{2,4})$", s.Endpoint)
+	if err != nil || matchedEndpoint == false {
+		return fmt.Errorf("Endpoint must be formatted: IP/FQDN:Port")
 	}
 
-	// if s.NodePool.Autoscaling.Enabled &&
-	// 	(s.NodePool.Autoscaling.MinNodeCount < 1 || s.NodePool.Autoscaling.MaxNodeCount < s.NodePool.Autoscaling.MinNodeCount) {
-	// 	return fmt.Errorf("minNodeCount in the NodePool must be >= 1 and <= maxNodeCount")
-	// }
+	if s.Username == "" {
+		return fmt.Errorf("Username is required")
+	}
+	if s.Password == "" {
+		return fmt.Errorf("Password is required")
+	}
+
+	if s.AmountOfWorkerNodes < 1 {
+		return fmt.Errorf("AmountOfWorkerNodes must be >= 1")
+	}
+	if s.WorkerCPU < 1 {
+		return fmt.Errorf("WorkerCPU must be >= 1")
+	}
+	if s.WorkerDiskMib < 1 {
+		return fmt.Errorf("WorkerDiskMib must be >= 1")
+	}
+	if s.WorkerMemoryMib < 1 {
+		return fmt.Errorf("WorkerMemoryMib must be >= 1")
+	}
+	if s.MasterCPU < 1 {
+		return fmt.Errorf("MasterCPU must be >= 1")
+	}
+	if s.MasterDiskMib < 1 {
+		return fmt.Errorf("MasterDiskMib must be >= 1")
+	}
+	if s.MasterMemoryMib < 1 {
+		return fmt.Errorf("MasterMemoryMib must be >= 1")
+	}
+	if s.EtcdCPU < 1 {
+		return fmt.Errorf("EtcdCPU must be >= 1")
+	}
+	if s.EtcdDiskMib < 1 {
+		return fmt.Errorf("EtcdDiskMib must be >= 1")
+	}
+	if s.EtcdMemoryMib < 1 {
+		return fmt.Errorf("EtcdMemoryMib must be >= 1")
+	}
+	if s.Version == "" {
+		return fmt.Errorf("Version is required")
+	}
+	if s.ReclaimPolicy == "" {
+		return fmt.Errorf("ReclaimPolicy is required")
+	}
+	if s.ReclaimPolicy != "Retain" && s.ReclaimPolicy != "Delete" {
+		return fmt.Errorf("ReclaimPolicy must be Retain or Delete")
+	}
+	if s.ClusterUser == "" {
+		return fmt.Errorf("ClusterUser is required")
+	}
+	if s.ClusterPassword == "" {
+		return fmt.Errorf("ClusterPassword is required")
+	}
+	if s.FileSystem == "" {
+		return fmt.Errorf("FileSystem is required")
+	}
+	if s.FileSystem != "xfs" && s.FileSystem != "ext4" {
+		return fmt.Errorf("FileSystem is must be ext4 or xfs")
+	}
+	if s.StorageContainer == "" {
+		return fmt.Errorf("StorageContainer is required")
+	}
+	if s.VMNetwork == "" {
+		return fmt.Errorf("VMNetwork is required")
+	}
+	if s.Image == "" {
+		return fmt.Errorf("Image is required")
+	}
+	if s.Cluster == "" {
+		return fmt.Errorf("Cluster is required")
+	}
+	if s.KarbonVersion == "" {
+		return fmt.Errorf("KarbonVersion is required")
+	}
+	if s.KarbonVersion != "2.0" && s.KarbonVersion != "2.1" {
+		return fmt.Errorf("KarbonVersion must be 2.0 or 2.1")
+	}
 
 	return nil
 }
@@ -695,9 +683,6 @@ func UpdateStateWithUUIDs(client *v3.Client, state *state) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[UpdateStateWithUUIDs] state.VMNetworkUUID: %s", state.VMNetworkUUID)
-	fmt.Printf("[UpdateStateWithUUIDs] state.ClusterUUID: %s", state.ClusterUUID)
-	fmt.Printf("[UpdateStateWithUUIDs] state.ImageUUID: %s", state.ImageUUID)
 	return nil
 }
 
@@ -711,8 +696,6 @@ func storeState(info *types.ClusterInfo, state state) error {
 		info.Metadata = map[string]string{}
 	}
 	info.Metadata["state"] = string(bytes)
-	// info.Metadata["project-id"] = state.ProjectID
-	// info.Metadata["zone"] = state.Zone
 	return nil
 }
 
@@ -723,129 +706,6 @@ func getState(info *types.ClusterInfo) (state, error) {
 	err := json.Unmarshal([]byte(info.Metadata["state"]), &state)
 	return state, err
 }
-
-// func (d *Driver) generateClusterCreateRequest(state state) *raw.CreateClusterRequest {
-// 	logrus.Infof("[DEBUG] generateClusterCreateRequest")
-// 	request := raw.CreateClusterRequest{
-// 		Cluster: &raw.Cluster{
-// 			NodePools: []*raw.NodePool{},
-// 		},
-// 	}
-// 	request.Cluster.Name = state.Name
-// 	request.Cluster.Zone = state.Zone
-// 	request.Cluster.InitialClusterVersion = state.MasterVersion
-// 	request.Cluster.Description = state.Description
-// 	request.Cluster.EnableKubernetesAlpha = state.EnableAlphaFeature
-// 	request.Cluster.ClusterIpv4Cidr = state.ClusterIpv4Cidr
-
-// 	disableHTTPLoadBalancing := state.EnableHTTPLoadBalancing != nil && !*state.EnableHTTPLoadBalancing
-// 	disableHorizontalPodAutoscaling := state.EnableHorizontalPodAutoscaling != nil && !*state.EnableHorizontalPodAutoscaling
-// 	disableNetworkPolicyConfig := state.EnableNetworkPolicyConfig != nil && !*state.EnableNetworkPolicyConfig
-
-// 	request.Cluster.AddonsConfig = &raw.AddonsConfig{
-// 		HttpLoadBalancing:        &raw.HttpLoadBalancing{Disabled: disableHTTPLoadBalancing},
-// 		HorizontalPodAutoscaling: &raw.HorizontalPodAutoscaling{Disabled: disableHorizontalPodAutoscaling},
-// 		KubernetesDashboard:      &raw.KubernetesDashboard{Disabled: !state.EnableKubernetesDashboard},
-// 		NetworkPolicyConfig:      &raw.NetworkPolicyConfig{Disabled: disableNetworkPolicyConfig},
-// 	}
-// 	request.Cluster.Network = state.Network
-// 	request.Cluster.Subnetwork = state.SubNetwork
-// 	request.Cluster.LegacyAbac = &raw.LegacyAbac{
-// 		Enabled: state.LegacyAbac,
-// 	}
-// 	request.Cluster.MasterAuth = state.MasterAuth
-// 	request.Cluster.NodePools = append(request.Cluster.NodePools, state.NodePool)
-
-// 	state.ResourceLabels["display-name"] = strings.ToLower(state.DisplayName)
-// 	request.Cluster.ResourceLabels = state.ResourceLabels
-
-// 	if state.MasterAuthorizedNetworksConfig.Enabled {
-// 		request.Cluster.MasterAuthorizedNetworksConfig = state.MasterAuthorizedNetworksConfig
-// 	}
-
-// 	request.Cluster.PrivateClusterConfig = state.PrivateClusterConfig
-// 	request.Cluster.IpAllocationPolicy = state.IPAllocationPolicy
-// 	if request.Cluster.IpAllocationPolicy.UseIpAliases == true &&
-// 		request.Cluster.IpAllocationPolicy.ClusterIpv4CidrBlock != "" {
-// 		request.Cluster.ClusterIpv4Cidr = ""
-// 	}
-
-// 	// Stackdriver logging and monitoring default to "on" if no parameter is
-// 	// passed in.  We must explicitly pass "none" if it isn't wanted
-// 	if state.EnableStackdriverLogging != nil && !*state.EnableStackdriverLogging {
-// 		request.Cluster.LoggingService = none
-// 	}
-// 	if state.EnableStackdriverMonitoring != nil && !*state.EnableStackdriverMonitoring {
-// 		request.Cluster.MonitoringService = none
-// 	}
-// 	if state.MaintenanceWindow != "" {
-// 		request.Cluster.MaintenancePolicy = &raw.MaintenancePolicy{
-// 			Window: &raw.MaintenanceWindow{
-// 				DailyMaintenanceWindow: &raw.DailyMaintenanceWindow{
-// 					StartTime: state.MaintenanceWindow,
-// 				},
-// 			},
-// 		}
-// 	}
-// 	request.Cluster.Locations = state.Locations
-
-// 	return &request
-// }
-
-// func (d *Driver) getServiceClient(ctx context.Context, state state) (*raw.Service, error) {
-// 	logrus.Infof("[DEBUG] getServiceClient")
-// 	// The google SDK has no sane way to pass in a TokenSource give all the different types (user, service account, etc)
-// 	// So we actually set an environment variable and then unset it
-// 	EnvMutex.Lock()
-// 	locked := true
-// 	setEnv := false
-// 	cleanup := func() {
-// 		if setEnv {
-// 			os.Unsetenv(defaultCredentialEnv)
-// 		}
-
-// 		if locked {
-// 			EnvMutex.Unlock()
-// 			locked = false
-// 		}
-// 	}
-// 	defer cleanup()
-
-// 	if state.CredentialPath != "" {
-// 		setEnv = true
-// 		os.Setenv(defaultCredentialEnv, state.CredentialPath)
-// 	}
-// 	if state.CredentialContent != "" {
-// 		file, err := ioutil.TempFile("", "credential-file")
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		defer os.Remove(file.Name())
-// 		defer file.Close()
-
-// 		if _, err := io.Copy(file, strings.NewReader(state.CredentialContent)); err != nil {
-// 			return nil, err
-// 		}
-
-// 		setEnv = true
-// 		os.Setenv(defaultCredentialEnv, file.Name())
-// 	}
-
-// 	ts, err := google.DefaultTokenSource(ctx, raw.CloudPlatformScope)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Unlocks
-// 	cleanup()
-
-// 	client := oauth2.NewClient(ctx, ts)
-// 	service, err := raw.New(client)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return service, nil
-// }
 
 func getClientset(cluster *raw.Cluster) (kubernetes.Interface, error) {
 	logrus.Infof("[DEBUG] getClientset")
@@ -874,125 +734,16 @@ func getClientset(cluster *raw.Cluster) (kubernetes.Interface, error) {
 	return clientset, nil
 }
 
-func generateServiceAccountTokenForGke(cluster *raw.Cluster) (string, error) {
-	logrus.Infof("[DEBUG] generateServiceAccountTokenForGke")
-	clientset, err := getClientset(cluster)
-	if err != nil {
-		return "", err
-	}
-
-	return util.GenerateServiceAccountToken(clientset)
-}
-
-func (d *Driver) waitCluster(ctx context.Context, svc *raw.Service, state *state) error {
-	logrus.Infof("[DEBUG] waitCluster")
-	// lastMsg := ""
-	// for {
-	// 	cluster, err := svc.Projects.Zones.Clusters.Get(state.ProjectID, state.Zone, state.Name).Context(ctx).Do()
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	if cluster.Status == runningStatus {
-	// 		log.Infof(ctx, "Cluster %v is running", state.Name)
-	// 		return nil
-	// 	}
-	// 	if cluster.Status != lastMsg {
-	// 		log.Infof(ctx, "%v cluster %v......", strings.ToLower(cluster.Status), state.Name)
-	// 		lastMsg = cluster.Status
-	// 	}
-	// 	time.Sleep(time.Second * 5)
-	// }
-	return nil
-}
-
-// func (d *Driver) waitClusterRemoveExp(ctx context.Context, svc *raw.Service, state *state) (*raw.Operation, error) {
-// 	logrus.Infof("[DEBUG] waitClwaitClusterRemoveExp")
-// 	var operation *raw.Operation
-// 	var err error
-
-// 	// for i := 1; i < 12; i++ {
-// 	// 	time.Sleep(time.Duration(i*i) * time.Second)
-// 	// 	operation, err = svc.Projects.Zones.Clusters.Delete(state.ProjectID, state.Zone, state.Name).Context(ctx).Do()
-// 	// 	if err == nil {
-// 	// 		return operation, nil
-// 	// 	} else if !strings.Contains(err.Error(), "Please wait and try again once it is done") {
-// 	// 		break
-// 	// 	}
-// 	// }
-// 	return operation, err
-// }
-
-// func (d *Driver) waitNodePool(ctx context.Context, svc *raw.Service, state *state) error {
-// 	logrus.Infof("[DEBUG] waitNodePool")
-// 	// lastMsg := ""
-// 	// for {
-// 	// 	nodepool, err := svc.Projects.Zones.Clusters.NodePools.Get(state.ProjectID, state.Zone, state.Name, state.NodePoolID).Context(ctx).Do()
-// 	// 	if err != nil {
-// 	// 		return err
-// 	// 	}
-// 	// 	if nodepool.Status == runningStatus {
-// 	// 		log.Infof(ctx, "Nodepool %v is running", state.Name)
-// 	// 		return nil
-// 	// 	}
-// 	// 	if nodepool.Status != lastMsg {
-// 	// 		log.Infof(ctx, "%v nodepool %v......", strings.ToLower(nodepool.Status), state.NodePoolID)
-// 	// 		lastMsg = nodepool.Status
-// 	// 	}
-// 	// 	time.Sleep(time.Second * 5)
-// 	// }
-// 	return nil
-// }
-
 func (d *Driver) getClusterStats(ctx context.Context, info *types.ClusterInfo) (*raw.Cluster, error) {
 	logrus.Infof("[DEBUG] getClusterStats")
-	// state, err := getState(info)
 
-	// if err != nil {
-	// 	return nil, err
-	// }
 	cluster := raw.Cluster{}
-
-	// svc, err := d.getServiceClient(ctx, state)
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// cluster, err := svc.Projects.Zones.Clusters.Get(state.ProjectID, state.Zone, state.Name).Context(ctx).Do()
-
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error getting cluster info: %v", err)
-	// }
 
 	return &cluster, nil
 }
 
 func (d *Driver) updateAndWait(ctx context.Context, info *types.ClusterInfo, updateRequest *raw.UpdateClusterRequest) error {
 	logrus.Info("[DEBUG] updateAndWait")
-	// cluster, err := d.getClusterStats(ctx, info)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// state, err := getState(info)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// client, err := d.getServiceClient(ctx, state)
-
-	// if err != nil {
-	// 	return err
-	// }
-
-	// _, err = client.Projects.Zones.Clusters.Update(state.ProjectID, state.Zone, cluster.Name, updateRequest).Context(ctx).Do()
-
-	// if err != nil {
-	// 	return fmt.Errorf("error while updating cluster: %v", err)
-	// }
-
 	return nil
 }
 

@@ -224,30 +224,3 @@ func (km karbonManagerv21) GetKubeConfigForCluster(karbonClusterInfo KarbonClust
 	utils.PrintToJSON(karbonClusterKubeconfig, "[karbonClusterKubeconfig]")
 	return &karbonClusterKubeconfig, nil
 }
-
-// func (km karbonManagerv21) GetKubeConfigStringForCluster(client *v3.Client, KarbonClusterName string) (string, error) {
-// 	kubeconfigResponse, err := client.V3.GetKubeConfigForKarbonCluster21()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	kubeconfig, _ := base64.StdEncoding.DecodeString(kubeconfigResponse.YmlConfig)
-// 	return string(kubeconfigResponse), nil
-// }
-
-// func (km karbonManagerv21) GenerateNodeSlice(AmountOfNodes int64, Image string, CPU int64, DiskMib int64, MemoryMib int64) ([]v3.KarbonCluster20NodeIntentInput, error) {
-// 	var nodeList []v3.KarbonCluster20NodeIntentInput
-// 	if AmountOfNodes < 1 {
-// 		return nil, fmt.Errorf("Amount of Nodes must be >0")
-// 	}
-// 	for i := 0; i < int(AmountOfNodes); i++ {
-// 		nodeList = append(nodeList, v3.KarbonCluster20NodeIntentInput{
-// 			ResourceConfig: v3.KarbonCluster20NodeResourceConfigIntentInput{
-// 				CPU:       CPU,
-// 				DiskMib:   DiskMib,
-// 				Image:     Image,
-// 				MemoryMib: MemoryMib,
-// 			},
-// 		})
-// 	}
-// 	return nodeList, nil
-// }
