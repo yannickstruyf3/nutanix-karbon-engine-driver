@@ -243,6 +243,7 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 			"",
 		}, state.KarbonVersion)
 	if err != nil {
+		logrus.Debugf("[DEBUG] Error occured during Create after creating KarbonManager %v", err)
 		return nil, err
 	}
 	err = UpdateStateWithUUIDs(karbonManager.GetClient(), &state)
