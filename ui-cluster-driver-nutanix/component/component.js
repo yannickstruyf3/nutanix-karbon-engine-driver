@@ -71,7 +71,8 @@ export default Ember.Component.extend(ClusterDriver, {
     if (!config) {
       config = this.get('globalStore').createRecord({
         type: configField,
-        endpoint: "",
+        host: "",
+        port: 9440,
         username: "",
         password: "",
         insecure: false,
@@ -132,7 +133,8 @@ export default Ember.Component.extend(ClusterDriver, {
 
     // Check if values are set
     let keys = {
-      "endpoint": { name: "Prism Central Endpoint", type: "string" },
+      "host": { name: "Prism Central Host", type: "string" },
+      "port": { name: "Prism Central Port", type: "integer" },
       "username": { name: "Prism Central Username", type: "string" },
       "password": { name: "Prism Central Password", type: "string" },
       "workernodes": { name: "Amount of Worker Nodes", type: "integer" },

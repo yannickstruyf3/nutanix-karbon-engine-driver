@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -36,7 +35,8 @@ type Driver struct {
 
 type state struct {
 	Name                string
-	Endpoint            string
+	Host                string
+	Port                int64
 	DisplayName         string
 	Username            string
 	Password            string
@@ -68,6 +68,10 @@ type state struct {
 	ClusterInfo         types.ClusterInfo
 }
 
+func (s state) GetEndpoint() string{
+	return fmt.Sprintf("%s:%d",s.Host,s.Port)
+}
+
 func NewDriver() types.Driver {
 	driver := &Driver{
 		driverCapabilities: types.Capabilities{
@@ -92,9 +96,13 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.StringType,
 		Usage: "the internal name of the cluster in Rancher",
 	}
-	driverFlag.Options["endpoint"] = &types.Flag{
+	driverFlag.Options["host"] = &types.Flag{
 		Type:  types.StringType,
-		Usage: "Endpoint",
+		Usage: "Host",
+	}
+	driverFlag.Options["port"] = &types.Flag{
+		Type:  types.IntType,
+		Usage: "Port",
 	}
 	driverFlag.Options["username"] = &types.Flag{
 		Type:  types.StringType,
@@ -228,7 +236,7 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
-			state.Endpoint,
+			state.GetEndpoint(),
 			state.Username,
 			state.Password,
 			"",
@@ -312,7 +320,7 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 	utils.PrintToJSON(newState, "[DEBUG] Update newState: ")
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
-			state.Endpoint,
+			state.GetEndpoint(),
 			state.Username,
 			state.Password,
 			"",
@@ -365,7 +373,7 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 	utils.PrintToJSON(state, "[DEBUG] PostCheckSTATE: ")
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
-			state.Endpoint,
+			state.GetEndpoint(),
 			state.Username,
 			state.Password,
 			"",
@@ -416,7 +424,7 @@ func (d *Driver) Remove(ctx context.Context, info *types.ClusterInfo) error {
 	utils.PrintToJSON(state, "[DEBUG] Remove STATE: ")
 	karbonManager, err := NewKarbonManager(
 		client.Credentials{
-			state.Endpoint,
+			state.GetEndpoint(),
 			state.Username,
 			state.Password,
 			"",
@@ -538,7 +546,8 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	utils.PrintToJSON(driverOptions, "[DEBUG] getStateFromOpts driverOptions:")
 	d := state{}
 	d.Name = options.GetValueFromDriverOptions(driverOptions, types.StringType, "name").(string)
-	d.Endpoint = options.GetValueFromDriverOptions(driverOptions, types.StringType, "endpoint").(string)
+	d.Host = options.GetValueFromDriverOptions(driverOptions, types.StringType, "host").(string)
+	d.Port = options.GetValueFromDriverOptions(driverOptions, types.IntType, "port").(int64)
 	d.DisplayName = options.GetValueFromDriverOptions(driverOptions, types.StringType, "display-name", "displayName").(string)
 	d.Username = options.GetValueFromDriverOptions(driverOptions, types.StringType, "username").(string)
 	d.Password = options.GetValueFromDriverOptions(driverOptions, types.StringType, "password").(string)
@@ -576,12 +585,12 @@ func (s *state) validate() error {
 		return fmt.Errorf("Karbon cluster name is required")
 	}
 	//Check endpoint
-	if s.Endpoint == "" {
-		return fmt.Errorf("Prism Central endpoint is required")
+	if s.Host == "" {
+		return fmt.Errorf("Prism Central host is required")
 	}
-	matchedEndpoint, err := regexp.MatchString("^.*:(\\d{2,4})$", s.Endpoint)
-	if err != nil || matchedEndpoint == false {
-		return fmt.Errorf("Endpoint must be formatted: IP/FQDN:Port")
+	//Check port
+	if s.Port < 1 {
+		return fmt.Errorf("Prism Central port is required")
 	}
 
 	if s.Username == "" {

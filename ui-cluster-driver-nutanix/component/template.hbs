@@ -5,17 +5,30 @@
   </div>
 
   <div class="row">
-    <div class="col span-6 mb-0">
-      <label class="form-control-static">Prism Central Endpoint</label>
+    <div class="col span-3 mb-0">
+      <label class="form-control-static">Prism Central Host</label>
       {{input type="text"
             required=true
             class="form-control"
-            value=cluster.%%DRIVERNAME%%EngineConfig.endpoint
+            value=cluster.%%DRIVERNAME%%EngineConfig.host
         
             readonly=(not-eq mode "new")
       }}
       <p class="help-block">
-        Nutanix Prism Central endpoint ip address/FQDN:9440
+        Nutanix Prism Central host ip address/FQDN
+      </p>
+    </div>
+    <div class="col span-3 mb-0">
+      <label class="form-control-static">Prism Central Port</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.port
+        
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Nutanix Prism Central port
       </p>
     </div>
     <div class="col span-6 mb-0">
