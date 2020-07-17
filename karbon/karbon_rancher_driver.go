@@ -65,6 +65,7 @@ type state struct {
 	FileSystem          string
 	StorageContainer    string
 	FlashMode           bool
+	CNIProvider         string
 	ClusterInfo         types.ClusterInfo
 }
 
@@ -203,6 +204,10 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.BoolType,
 		Usage: "Flash mode",
 	}
+	driverFlag.Options["cniprovider"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "CNI provider",
+	}
 
 	return &driverFlag, nil
 }
@@ -283,6 +288,7 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 		StorageContainer:      state.StorageContainer,
 		FileSystem:            state.FileSystem,
 		FlashMode:             false,
+		CNIProvider:           state.CNIProvider,
 	}
 	KarbonClusterUUID, err := karbonManager.RequestKarbonCluster(karbonClusterRequest, true)
 	if err != nil {
@@ -573,7 +579,7 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.VMNetwork = options.GetValueFromDriverOptions(driverOptions, types.StringType, "vmnetwork").(string)
 	d.Image = options.GetValueFromDriverOptions(driverOptions, types.StringType, "image").(string)
 	d.Cluster = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cluster").(string)
-
+    d.CNIProvider = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cniprovider").(string)
 	utils.PrintToJSON(d, "[DEBUG] getStateFromOpts: ")
 	return d, d.validate()
 }
@@ -592,7 +598,12 @@ func (s *state) validate() error {
 	if s.Port < 1 {
 		return fmt.Errorf("Prism Central port is required")
 	}
-
+	if s.CNIProvider == "" {
+		return fmt.Errorf("CNIProvider is required")
+	}
+	if strings.ToLower(s.CNIProvider) != "flannel" && strings.ToLower(s.CNIProvider) != "calico" {
+		return fmt.Errorf("CNIProvider must be Flannel or Calico")
+	}
 	if s.Username == "" {
 		return fmt.Errorf("Username is required")
 	}

@@ -222,7 +222,16 @@ type KarbonCluster21CNIConfigIntentInput struct {
 	NodeCIDRMaskSize int64                                   `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
 	PodIPv4CIDR      string                                  `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
 	ServiceIPv4CIDR  string                                  `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
-	FlannelConfig    KarbonCluster21FlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+	FlannelConfig    *KarbonCluster21FlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+	CalicoConfig     *KarbonCluster21CalicoConfigIntentInput   `json:"calico_config" mapstructure:"calico_config, omitempty"`
+}
+
+type KarbonCluster21CalicoConfigIntentInput struct{
+	IpPoolConfigs []KarbonCluster21CalicoConfigIpPoolConfigIntentInput `json:"ip_pool_configs" mapstructure:"ip_pool_configs,omitempty"`
+}
+
+type KarbonCluster21CalicoConfigIpPoolConfigIntentInput struct{
+	CIDR string  `json:"cidr" mapstructure:"cidr"`
 }
 
 type KarbonCluster21FlannelConfigIntentInput struct{}

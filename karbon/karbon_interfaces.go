@@ -34,6 +34,7 @@ type KarbonClusterRequest struct {
 	FileSystem            string
 	StorageContainer      string
 	FlashMode             bool
+	CNIProvider			  string
 }
 
 type KarbonClusterInfo struct {

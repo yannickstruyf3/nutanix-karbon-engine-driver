@@ -24,6 +24,11 @@ const reclaimPolicyMap = {
   'Delete': 'Delete',
   'Retain': 'Retain',
 }
+
+const cniProviderMap = {
+  'Flannel': 'Flannel',
+  'Calico': 'Calico',
+}
 const filesystemMap = {
   'ext4': 'ext4',
   'xfs': 'xfs',
@@ -78,7 +83,8 @@ export default Ember.Component.extend(ClusterDriver, {
         insecure: false,
         workernodes: 1,
         image: "",
-        version: "1.16.8-0",
+        cniprovider: "Flannel",
+        version: "1.16.10-0",
         cluster: "",
         vmnetwork: "",
         workercpu: 8,
@@ -138,8 +144,8 @@ export default Ember.Component.extend(ClusterDriver, {
       "username": { name: "Prism Central Username", type: "string" },
       "password": { name: "Prism Central Password", type: "string" },
       "workernodes": { name: "Amount of Worker Nodes", type: "integer" },
-      "image": { name: "Kubernetes Version", type: "string" },
-      "version": { name: "Karbon Version", type: "string" },
+      "image": { name: "Kubernetes Image", type: "string" },
+      "version": { name: "Kubernetes Version", type: "string" },
       "cluster": { name: "Nutanix Cluster", type: "string" },
       "vmnetwork": { name: "VM Network", type: "string" },
       "workercpu": { name: "Worker CPU", type: "integer" },
@@ -197,6 +203,12 @@ export default Ember.Component.extend(ClusterDriver, {
     label: e[1],
     value: e[0]
   })),
+
+  cniProviderChoices: Object.entries(cniProviderMap).map((e) => ({
+    label: e[1],
+    value: e[0]
+  })),
+
   filesystemChoices: Object.entries(filesystemMap).map((e) => ({
     label: e[1],
     value: e[0]

@@ -123,7 +123,7 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 		Name:    karbonClusterRequest.Name,
 		Version: karbonClusterRequest.Version,
 		CNIConfig: v3.KarbonCluster21CNIConfigIntentInput{
-			FlannelConfig:    v3.KarbonCluster21FlannelConfigIntentInput{},
+			// FlannelConfig:    v3.KarbonCluster21FlannelConfigIntentInput{},
 			NodeCIDRMaskSize: karbonClusterRequest.NetworkSubnetLength,
 			PodIPv4CIDR:      karbonClusterRequest.NetworkCidr,
 			ServiceIPv4CIDR:  karbonClusterRequest.ServiceClusterIPRange,
@@ -193,10 +193,28 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 			},
 		},
 	}
+
+	if strings.ToLower(karbonClusterRequest.CNIProvider) != "flannel" && strings.ToLower(karbonClusterRequest.CNIProvider) != "calico"{
+		return "", fmt.Errorf("CNIProvider must be Flannel or Calico")
+	}
+	if strings.ToLower(karbonClusterRequest.CNIProvider) == "calico"{
+		karbon_cluster.CNIConfig.CalicoConfig = &v3.KarbonCluster21CalicoConfigIntentInput{
+			IpPoolConfigs: []v3.KarbonCluster21CalicoConfigIpPoolConfigIntentInput{
+				v3.KarbonCluster21CalicoConfigIpPoolConfigIntentInput{
+					CIDR: karbonClusterRequest.NetworkCidr,
+				},
+			},
+		}
+	} else{
+		karbon_cluster.CNIConfig.FlannelConfig = &v3.KarbonCluster21FlannelConfigIntentInput{}
+	}
+
+	utils.PrintToJSON(karbon_cluster, "[DEBUG karbon_cluster: ")
 	createClusterResponse, err := km.Client.V3.CreateKarbonCluster21(karbon_cluster)
 	if err != nil {
 		return "", fmt.Errorf("Error occured during cluster creation:\n %s", err)
 	}
+	utils.PrintToJSON(createClusterResponse, "[DEBUG createClusterResponse: ")
 	if createClusterResponse.TaskUUID == "" {
 		return "", fmt.Errorf("Did not retrieve Task UUID exiting!")
 	}

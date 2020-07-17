@@ -85,6 +85,16 @@
         Note: Can be modified during Karbon cluster editing
       </p>
     </div>
+    <div class="col span-6 mb-0">
+      <label class="form-control-static">CNI Provider</label>
+      {{searchable-select class="form-control"
+        content=cniProviderChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.cniprovider
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
   </div>
   <div class="row">
     <div class="col span-6 mb-0">
