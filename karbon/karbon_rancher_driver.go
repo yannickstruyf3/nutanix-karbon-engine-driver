@@ -755,7 +755,7 @@ func FindNutanixClusterByName(client *v3.Client, clusterName string) (string, er
 		return "", nil
 	}
 	for _, c := range clusters.Entities {
-		if clusterName == *c.Spec.Name {
+		if strings.ToLower(clusterName) == strings.ToLower(*c.Spec.Name) {
 			return *c.Metadata.UUID, nil
 		}
 	}
@@ -775,7 +775,7 @@ func FindImageByName(client *v3.Client, imageName string) (string, error) {
 	}
 	for _, n := range possibleImageNames {
 		for _, i := range images.Entities {
-			if n == *i.Spec.Name {
+			if strings.ToLower(n) == strings.ToLower(*i.Spec.Name) {
 				return *i.Metadata.UUID, nil
 			}
 		}
@@ -790,7 +790,7 @@ func FindSubnetByName(client *v3.Client, subnetName string) (string, error) {
 		return "", nil
 	}
 	for _, i := range subnets.Entities {
-		if subnetName == *i.Spec.Name {
+		if strings.ToLower(subnetName) == strings.ToLower(*i.Spec.Name) {
 			return *i.Metadata.UUID, nil
 		}
 	}
