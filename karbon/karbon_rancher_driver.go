@@ -64,7 +64,6 @@ type state struct {
 	ClusterPassword     string
 	FileSystem          string
 	StorageContainer    string
-	KarbonVersion       string
 	FlashMode           bool
 	ClusterInfo         types.ClusterInfo
 }
@@ -196,10 +195,6 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.BoolType,
 		Usage: "Flash mode",
 	}
-	driverFlag.Options["karbonversion"] = &types.Flag{
-		Type:  types.StringType,
-		Usage: "Karbon version",
-	}
 
 	return &driverFlag, nil
 }
@@ -241,7 +236,7 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 			true,
 			true,
 			"",
-		}, state.KarbonVersion)
+		})
 	if err != nil {
 		logrus.Debugf("[DEBUG] Error occured during Create after creating KarbonManager %v", err)
 		return nil, err
@@ -325,7 +320,7 @@ func (d *Driver) Update(ctx context.Context, info *types.ClusterInfo, opts *type
 			true,
 			true,
 			"",
-		}, state.KarbonVersion)
+		})
 	// currentAmountOfWorkerNodes := state.AmountOfWorkerNodes
 	// state.KarbonClusterUUID
 	newAmountOfWorkerNodes := newState.AmountOfWorkerNodes
@@ -378,7 +373,7 @@ func (d *Driver) PostCheck(ctx context.Context, info *types.ClusterInfo) (*types
 			true,
 			true,
 			"",
-		}, state.KarbonVersion)
+		})
 	karbonClusterInfo := KarbonClusterInfo{
 		Name: state.DisplayName,
 		UUID: state.KarbonClusterUUID,
@@ -429,7 +424,7 @@ func (d *Driver) Remove(ctx context.Context, info *types.ClusterInfo) error {
 			true,
 			true,
 			"",
-		}, state.KarbonVersion)
+		})
 	karbonClusterInfo := KarbonClusterInfo{
 		Name: state.DisplayName,
 		UUID: state.KarbonClusterUUID,
@@ -569,7 +564,6 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.VMNetwork = options.GetValueFromDriverOptions(driverOptions, types.StringType, "vmnetwork").(string)
 	d.Image = options.GetValueFromDriverOptions(driverOptions, types.StringType, "image").(string)
 	d.Cluster = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cluster").(string)
-	d.KarbonVersion = options.GetValueFromDriverOptions(driverOptions, types.StringType, "karbonversion").(string)
 
 	utils.PrintToJSON(d, "[DEBUG] getStateFromOpts: ")
 	return d, d.validate()
@@ -660,13 +654,6 @@ func (s *state) validate() error {
 	if s.Cluster == "" {
 		return fmt.Errorf("Cluster is required")
 	}
-	if s.KarbonVersion == "" {
-		return fmt.Errorf("KarbonVersion is required")
-	}
-	if s.KarbonVersion != "2.0" && s.KarbonVersion != "2.1" {
-		return fmt.Errorf("KarbonVersion must be 2.0 or 2.1")
-	}
-
 	return nil
 }
 

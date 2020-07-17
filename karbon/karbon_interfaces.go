@@ -1,7 +1,6 @@
 package karbon
 
 import (
-	"fmt"
 
 	"github.com/rancher/kontainer-engine-driver-karbon/client"
 	v3 "github.com/rancher/kontainer-engine-driver-karbon/client/v3"
@@ -54,27 +53,12 @@ type KarbonManager interface {
 	GetKubernetesVersion(karbonClusterInfo KarbonClusterInfo) (string, error)
 }
 
-func NewKarbonManager(credentials client.Credentials, KarbonVersion string) (KarbonManager, error) {
+func NewKarbonManager(credentials client.Credentials) (KarbonManager, error) {
 	client, err := v3.NewV3Client(credentials)
 	if err != nil {
 		return nil, err
 	}
-	if KarbonVersion == "2.0" {
-		return &karbonManagerv20{
+	return &karbonManagerv21{
 			Client: client,
 		}, nil
-	}
-	if KarbonVersion == "2.1" {
-		return &karbonManagerv21{
-			Client: client,
-		}, nil
-	}
-	// }
-	// if KarbonVersion == "2.1" {
-	// 	return KarbonManagerv21{
-	// 		Client: Client,
-	// 	}, nil
-	// }
-	return nil, fmt.Errorf("Karbon version not supported!")
-
 }

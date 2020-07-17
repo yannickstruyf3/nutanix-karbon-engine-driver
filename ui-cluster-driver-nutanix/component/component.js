@@ -78,7 +78,6 @@ export default Ember.Component.extend(ClusterDriver, {
         workernodes: 1,
         image: "",
         version: "1.16.8-0",
-        karbonversion: "2.0",
         cluster: "",
         vmnetwork: "",
         workercpu: 8,
@@ -139,7 +138,6 @@ export default Ember.Component.extend(ClusterDriver, {
       "workernodes": { name: "Amount of Worker Nodes", type: "integer" },
       "image": { name: "Kubernetes Version", type: "string" },
       "version": { name: "Karbon Version", type: "string" },
-      "karbonversion": { name: "Karbon Image", type: "string" },
       "cluster": { name: "Nutanix Cluster", type: "string" },
       "vmnetwork": { name: "VM Network", type: "string" },
       "workercpu": { name: "Worker CPU", type: "integer" },
@@ -178,9 +176,6 @@ export default Ember.Component.extend(ClusterDriver, {
     if (!["Delete", "Retain"].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.reclaimpolicy'))) {
       errors.push('Reclaim policy must be Delete or Retain');
     }
-    if (!Object.keys(karbonVersionAndChoicesMap).includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.karbonversion'))) {
-      errors.push('Reclaim policy must be Delete or Retain');
-    }
     // Add more specific errors
     // Set the array of errors for display,
     // and return true if saving should continue.
@@ -205,17 +200,10 @@ export default Ember.Component.extend(ClusterDriver, {
     value: e[0]
   })),
   versionChoices: computed('cluster.%%DRIVERNAME%%EngineConfig.karbonversion', function () {
-    let karbonVersion = get(this, 'cluster.%%DRIVERNAME%%EngineConfig.karbonversion');
-    return Object.entries(karbonVersionAndChoicesMap[karbonVersion]).map((e) => ({
+    return Object.entries(karbonVersionAndChoicesMap["2.1"]).map((e) => ({
       label: e[0],
       value: e[0]
     }))
   }),
-
-  karbonVersionChoices: Object.entries(karbonVersionAndChoicesMap).map((e) => ({
-    label: e[0],
-    value: e[0]
-  })),
-
 });
 
