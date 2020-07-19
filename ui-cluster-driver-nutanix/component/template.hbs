@@ -74,17 +74,7 @@
   </div>
 
   <div class="row">
-    <div class="col span-6 mb-0">
-      <label class="form-control-static"> Amount of Worker Nodes</label>
-      {{input-integer 
-        min=1 
-        value=cluster.%%DRIVERNAME%%EngineConfig.workernodes 
-        classNames="form-control"
-      }}
-      <p class="help-block">
-        Note: Can be modified during Karbon cluster editing
-      </p>
-    </div>
+
     <div class="col span-6 mb-0">
       <label class="form-control-static">CNI Provider</label>
       {{searchable-select class="form-control"
@@ -194,13 +184,11 @@
     </div>
     <div class="col span-6 mb-0">
       <label class="form-control-static">Filesystem</label>
-
       {{searchable-select class="form-control"
           content=filesystemChoices
           value=cluster.%%DRIVERNAME%%EngineConfig.filesystem
           readonly=(not-eq mode "new")
       }}
-
       <p class="help-block">
       </p>
     </div>
@@ -231,8 +219,69 @@
   </div>
   <p></p>
   <div class="over-hr r-mt20 r-mb20">
-    <span>Karbon Hardware details</span>
+    <span>Karbon Infrastructure Details</span>
   </div>
+  {{!-- deployment row --}}
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Deployment Type</label>
+      {{searchable-select class="form-control"
+          content=deploymentChoices
+          value=cluster.%%DRIVERNAME%%EngineConfig.deployment
+          readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  {{!-- Amount of Nodes row --}}
+  <div class="row">
+    {{!-- <div class="col span-4 mb-0">
+      <label class="form-control-static"> Amount of Master Nodes</label>
+      {{searchable-select
+        content=amountOfMasterNodesChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.masternodes
+        classNames="form-control"
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div> --}}
+    <div class="col span-4 mb-0">
+      <label class="form-control-static"> Amount of Master Nodes</label>
+      {{searchable-select
+        content=amountOfMasterNodesChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.masternodes 
+        classNames="form-control"
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static"> Amount of ETCD Nodes</label>
+      {{searchable-select
+        content=amountOfETCDNodesChoices
+        value=cluster.%%DRIVERNAME%%EngineConfig.etcdnodes 
+        classNames="form-control"
+        readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static"> Amount of Worker Nodes</label>
+      {{input-integer 
+        min=1 
+        value=cluster.%%DRIVERNAME%%EngineConfig.workernodes 
+        classNames="form-control"
+      }}
+      <p class="help-block">
+        Note: Can be modified during Karbon cluster editing
+      </p>
+    </div>
+  </div>
+  {{!-- CPU row --}}
   <div class="row">
     <div class="col span-4 mb-0">
       <label class="form-control-static">Master CPU</label>
@@ -246,32 +295,6 @@
       </p>
     </div>
     <div class="col span-4 mb-0">
-      <label class="form-control-static">Master Memory</label>
-      {{input-integer 
-            min=1
-            classNames="form-control"
-            value=cluster.%%DRIVERNAME%%EngineConfig.mastermemorymib
-            readonly=(not-eq mode "new")
-          }}
-      <p class="help-block">
-        in MB
-      </p>
-    </div>
-    <div class="col span-4 mb-0">
-      <label class="form-control-static">Master Storage</label>
-      {{input-integer 
-            min=1
-            classNames="form-control"
-            value=cluster.%%DRIVERNAME%%EngineConfig.masterdiskmib
-            readonly=(not-eq mode "new")
-          }}
-      <p class="help-block">
-        in MB
-      </p>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col span-4 mb-0">
       <label class="form-control-static">ETCD CPU</label>
       {{input-integer 
             min=1
@@ -283,11 +306,65 @@
       </p>
     </div>
     <div class="col span-4 mb-0">
+      <label class="form-control-static">Worker CPU</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.workercpu
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+      </p>
+    </div>
+  </div>
+  {{!-- Memory row --}}
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master Memory</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.mastermemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+
+    <div class="col span-4 mb-0">
       <label class="form-control-static">ETCD Memory</label>
       {{input-integer 
             min=1
             classNames="form-control"
             value=cluster.%%DRIVERNAME%%EngineConfig.etcdmemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Worker Memory</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.workermemorymib
+            readonly=(not-eq mode "new")
+          }}
+      <p class="help-block">
+        in MB
+      </p>
+    </div>
+  </div>
+  {{!-- Storage row --}}
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master Storage</label>
+      {{input-integer 
+            min=1
+            classNames="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterdiskmib
             readonly=(not-eq mode "new")
           }}
       <p class="help-block">
@@ -306,31 +383,7 @@
         in MB
       </p>
     </div>
-  </div>
-  <div class="row">
-    <div class="col span-4 mb-0">
-      <label class="form-control-static">Worker CPU</label>
-      {{input-integer 
-            min=1
-            classNames="form-control"
-            value=cluster.%%DRIVERNAME%%EngineConfig.workercpu
-            readonly=(not-eq mode "new")
-          }}
-      <p class="help-block">
-      </p>
-    </div>
-    <div class="col span-4 mb-0">
-      <label class="form-control-static">Worker Memory</label>
-      {{input-integer 
-            min=1
-            classNames="form-control"
-            value=cluster.%%DRIVERNAME%%EngineConfig.workermemorymib
-            readonly=(not-eq mode "new")
-          }}
-      <p class="help-block">
-        in MB
-      </p>
-    </div>
+
     <div class="col span-4 mb-0">
       <label class="form-control-static">Worker Storage</label>
       {{input-integer 
@@ -345,8 +398,102 @@
       </p>
     </div>
   </div>
-
-
+  {{!-- Production configuration row --}}
+  {{#if (not-eq cluster.%%DRIVERNAME%%EngineConfig.deployment "Development")}}
+  <div class="over-hr r-mt20 r-mb20">
+    <span>Karbon Production Configuration Details</span>
+  </div>
+  {{!-- Production VIP row --}}
+  <div class="row">
+    <div class="col span-3 mb-0">
+      <label class="form-control-static">Master VIP IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.mastervipip
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master VIP address
+      </p>
+    </div>
+  </div>
+  {{!-- Production master ip row --}}
+  {{#if (eq cluster.%%DRIVERNAME%%EngineConfig.deployment 'Production - active/active')}}
+  <div class="row">
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master 1 IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterip1
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master 1 ip address
+      </p>
+    </div>
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master 2 IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterip2
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master 2 ip address
+      </p>
+    </div>
+  </div>
+  {{#if visibleCheckMasterIp3}}
+  <div class="row">
+    {{#if visibleCheckMasterIp3}}
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master 3 IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterip3
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master 3 ip address
+      </p>
+    </div>
+    {{/if}}
+    {{#if visibleCheckMasterIp4}}
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master 4 IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterip4
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master 4 ip address
+      </p>
+    </div>
+    {{/if}}
+    {{#if visibleCheckMasterIp5}}
+    <div class="col span-4 mb-0">
+      <label class="form-control-static">Master 5 IP</label>
+      {{input type="text"
+            required=true
+            class="form-control"
+            value=cluster.%%DRIVERNAME%%EngineConfig.masterip5
+            readonly=(not-eq mode "new")
+      }}
+      <p class="help-block">
+        Kubernetes master 5 ip address
+      </p>
+    </div>
+    {{/if}}
+  </div>
+  {{/if}}
+  {{/if}}
+  {{/if}}
   {{!-- This component shows errors produced by validate() in the component --}}
   {{top-errors errors=errors}}
 

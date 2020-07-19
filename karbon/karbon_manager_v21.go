@@ -117,8 +117,13 @@ func (km karbonManagerv21) DeleteKarbonCluster(karbonClusterInfo KarbonClusterIn
 }
 
 func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClusterRequest, WaitCompletion bool) (string, error) {
-
 	nodeOSVersion := strings.Replace(karbonClusterRequest.Image, "karbon-", "", -1)
+	workerNodePoolName := genUUID()
+	etcdNodePoolName := genUUID()
+	masterNodePoolName := genUUID()
+	// workerNodePoolName := fmt.Sprintf("%s-%s", karbonClusterRequest.Name, "worker-nodepool")
+	// etcdNodePoolName := fmt.Sprintf("%s-%s", karbonClusterRequest.Name, "etcd-nodepool")
+	// masterNodePoolName := fmt.Sprintf("%s-%s", karbonClusterRequest.Name, "master-nodepool")
 	karbon_cluster := &v3.KarbonCluster21IntentInput{
 		Name:    karbonClusterRequest.Name,
 		Version: karbonClusterRequest.Version,
@@ -131,9 +136,9 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 		ETCDConfig: v3.KarbonCluster21ETCDConfigIntentInput{
 			NodePools: []v3.KarbonCluster21NodePoolIntentInput{
 				v3.KarbonCluster21NodePoolIntentInput{
-					Name:          "etcd-nodepool",
+					Name:          etcdNodePoolName,
 					NodeOSVersion: nodeOSVersion,
-					NumInstances:  1,
+					NumInstances:  karbonClusterRequest.AmountOfETCDNodes,
 					AHVConfig: v3.KarbonCluster21NodePoolAHVConfigIntentInput{
 						CPU:                     karbonClusterRequest.EtcdCPU,
 						DiskMib:                 karbonClusterRequest.EtcdDiskMib,
@@ -147,9 +152,9 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 		MastersConfig: v3.KarbonCluster21MasterConfigIntentInput{
 			NodePools: []v3.KarbonCluster21NodePoolIntentInput{
 				v3.KarbonCluster21NodePoolIntentInput{
-					Name:          "master-nodepool",
+					Name:          masterNodePoolName,
 					NodeOSVersion: nodeOSVersion,
-					NumInstances:  1,
+					NumInstances:  karbonClusterRequest.AmountOfMasterNodes,
 					AHVConfig: v3.KarbonCluster21NodePoolAHVConfigIntentInput{
 						CPU:                     karbonClusterRequest.MasterCPU,
 						DiskMib:                 karbonClusterRequest.MasterDiskMib,
@@ -179,7 +184,7 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 		WorkersConfig: v3.KarbonCluster21WorkerConfigIntentInput{
 			NodePools: []v3.KarbonCluster21NodePoolIntentInput{
 				v3.KarbonCluster21NodePoolIntentInput{
-					Name:          "worker-nodepool",
+					Name:          workerNodePoolName,
 					NodeOSVersion: nodeOSVersion,
 					NumInstances:  karbonClusterRequest.AmountOfWorkerNodes,
 					AHVConfig: v3.KarbonCluster21NodePoolAHVConfigIntentInput{
@@ -194,10 +199,61 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 		},
 	}
 
-	if strings.ToLower(karbonClusterRequest.CNIProvider) != "flannel" && strings.ToLower(karbonClusterRequest.CNIProvider) != "calico"{
+	switch depl := strings.ToLower(karbonClusterRequest.Deployment); depl {
+	case "production - active/active":
+		if karbonClusterRequest.AmountOfMasterNodes < 2 || karbonClusterRequest.AmountOfMasterNodes > 5 {
+			return "", fmt.Errorf("AmountOfMasterNodes must be between 2 and 5 when creating an Active/Active Karbon cluster")
+		}
+		if karbonClusterRequest.AmountOfETCDNodes != 3 && karbonClusterRequest.AmountOfETCDNodes != 5 {
+			return "", fmt.Errorf("AmountOfETCDNodes must be 3 or 5 when creating an Active/Active Karbon cluster")
+		}
+		if karbonClusterRequest.MasterVIPIP == "" {
+			return "", fmt.Errorf("MasterVIPIP must be set when creating an Active/Passive Karbon cluster")
+		}
+		masterNodeConfigList := make([]v3.KarbonCluster21MasterNodeMasterConfigIntentInput, 0)
+		masterIPs, err := km.ParseMasterIP(karbonClusterRequest)
+		if err != nil {
+			return "", err
+		}
+		for i := 0; i < int(karbonClusterRequest.AmountOfMasterNodes); i++ {
+			masterNodeConfigList = append(masterNodeConfigList, v3.KarbonCluster21MasterNodeMasterConfigIntentInput{
+				IPv4Address:  masterIPs[i],
+				NodePoolName: masterNodePoolName,
+			})
+		}
+		karbon_cluster.MastersConfig.ExternalLBConfig = &v3.KarbonCluster21ExternalLBMasterConfigIntentInput{
+			ExternalIPv4Address: karbonClusterRequest.MasterVIPIP,
+			MasterNodesConfig:   masterNodeConfigList,
+		}
+	case "production - active/passive":
+		if karbonClusterRequest.AmountOfMasterNodes != 2 {
+			return "", fmt.Errorf("AmountOfMasterNodes must be 2 when creating an Active/Passive Karbon cluster")
+		}
+		if karbonClusterRequest.AmountOfETCDNodes != 3 && karbonClusterRequest.AmountOfETCDNodes != 5 {
+			return "", fmt.Errorf("AmountOfETCDNodes must be 3 or 5 when creating an Active/Passive Karbon cluster")
+		}
+		if karbonClusterRequest.MasterVIPIP == "" {
+			return "", fmt.Errorf("MasterVIPIP must be set when creating an Active/Passive Karbon cluster")
+		}
+		karbon_cluster.MastersConfig.ActivePassiveConfig = &v3.KarbonCluster21ActivePassiveMasterConfigIntentInput{
+			ExternalIPv4Address: karbonClusterRequest.MasterVIPIP,
+		}
+	case "development":
+		if karbonClusterRequest.AmountOfMasterNodes != 1 {
+			return "", fmt.Errorf("AmountOfMasterNodes must be 1 when creating an Active/Passive Karbon cluster")
+		}
+		if karbonClusterRequest.AmountOfETCDNodes != 1 {
+			return "", fmt.Errorf("AmountOfETCDNodes must be 1 when creating a Development Karbon cluster")
+		}
+		karbon_cluster.MastersConfig.SingleMasterConfig = &v3.KarbonCluster21SingleMasterConfigIntentInput{}
+	default:
+		return "", fmt.Errorf("Unsupported deployment type: %s.\n", depl)
+	}
+
+	if strings.ToLower(karbonClusterRequest.CNIProvider) != "flannel" && strings.ToLower(karbonClusterRequest.CNIProvider) != "calico" {
 		return "", fmt.Errorf("CNIProvider must be Flannel or Calico")
 	}
-	if strings.ToLower(karbonClusterRequest.CNIProvider) == "calico"{
+	if strings.ToLower(karbonClusterRequest.CNIProvider) == "calico" {
 		karbon_cluster.CNIConfig.CalicoConfig = &v3.KarbonCluster21CalicoConfigIntentInput{
 			IpPoolConfigs: []v3.KarbonCluster21CalicoConfigIpPoolConfigIntentInput{
 				v3.KarbonCluster21CalicoConfigIpPoolConfigIntentInput{
@@ -205,7 +261,7 @@ func (km karbonManagerv21) RequestKarbonCluster(karbonClusterRequest *KarbonClus
 				},
 			},
 		}
-	} else{
+	} else {
 		karbon_cluster.CNIConfig.FlannelConfig = &v3.KarbonCluster21FlannelConfigIntentInput{}
 	}
 
@@ -241,4 +297,27 @@ func (km karbonManagerv21) GetKubeConfigForCluster(karbonClusterInfo KarbonClust
 	}
 	utils.PrintToJSON(karbonClusterKubeconfig, "[karbonClusterKubeconfig]")
 	return &karbonClusterKubeconfig, nil
+}
+
+func (km karbonManagerv21) ParseMasterIP(karbonClusterRequest *KarbonClusterRequest) ([]string, error) {
+	masterIpList := make([]string, 0)
+	if karbonClusterRequest.MasterIP1 != "" {
+		masterIpList = append(masterIpList, karbonClusterRequest.MasterIP1)
+	}
+	if karbonClusterRequest.MasterIP2 != "" {
+		masterIpList = append(masterIpList, karbonClusterRequest.MasterIP2)
+	}
+	if karbonClusterRequest.MasterIP3 != "" {
+		masterIpList = append(masterIpList, karbonClusterRequest.MasterIP3)
+	}
+	if karbonClusterRequest.MasterIP4 != "" {
+		masterIpList = append(masterIpList, karbonClusterRequest.MasterIP4)
+	}
+	if karbonClusterRequest.MasterIP5 != "" {
+		masterIpList = append(masterIpList, karbonClusterRequest.MasterIP5)
+	}
+	if len(masterIpList) < int(karbonClusterRequest.AmountOfMasterNodes) {
+		return nil, fmt.Errorf("Not enough Master IPs were passed!")
+	}
+	return masterIpList, nil
 }

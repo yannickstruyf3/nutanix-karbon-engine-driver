@@ -49,6 +49,41 @@ const karbonVersionAndChoicesMap = {
   },
 }
 
+
+const deploymentOptionsMap = {
+  'Development': {
+    'amountOfMasters': {
+      "1": 1,
+    },
+    'amountOfETCDs': {
+      "1": 1,
+    }
+  },
+  'Production - active/passive': {
+    'amountOfMasters': {
+      "2": 2,
+    },
+    'amountOfETCDs': {
+      "3": 3,
+      "5": 5,
+    }
+  },
+  'Production - active/active': {
+    'amountOfMasters': {
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+    },
+    'amountOfETCDs': {
+      "3": 3,
+      "5": 5,
+    }
+  },
+}
+
+
+
 /*!!!!!!!!!!!DO NOT CHANGE START!!!!!!!!!!!*/
 export default Ember.Component.extend(ClusterDriver, {
   driverName: '%%DRIVERNAME%%',
@@ -56,6 +91,19 @@ export default Ember.Component.extend(ClusterDriver, {
   app: service(),
   router: service(),
   /*!!!!!!!!!!!DO NOT CHANGE END!!!!!!!!!!!*/
+
+  visibleCheckMasterIp3: function () {
+    return get(this, 'cluster.%%DRIVERNAME%%EngineConfig.masternodes') > 2;
+  }.property('cluster.%%DRIVERNAME%%EngineConfig.masternodes'),
+  visibleCheckMasterIp4: function () {
+    return get(this, 'cluster.%%DRIVERNAME%%EngineConfig.masternodes') > 3;
+  }.property('cluster.%%DRIVERNAME%%EngineConfig.masternodes'),
+  visibleCheckMasterIp5: function () {
+    return get(this, 'cluster.%%DRIVERNAME%%EngineConfig.masternodes') > 4;
+  }.property('cluster.%%DRIVERNAME%%EngineConfig.masternodes'),
+
+
+
 
   init() {
     /*!!!!!!!!!!!DO NOT CHANGE START!!!!!!!!!!!*/
@@ -101,7 +149,16 @@ export default Ember.Component.extend(ClusterDriver, {
         storagecontainer: "",
         filesystem: "ext4",
         reclaimpolicy: "Delete",
-        flashmode: false
+        flashmode: false,
+        deployment: "Development",
+        masternodes: 1,
+        etcdnodes: 1,
+        mastervipip: "",
+        masterip1: "",
+        masterip2: "",
+        masterip3: "",
+        masterip4: "",
+        masterip5: "",
       });
 
       set(this, 'cluster.%%DRIVERNAME%%EngineConfig', config);
@@ -124,7 +181,6 @@ export default Ember.Component.extend(ClusterDriver, {
       get(this, 'router').transitionTo('global-admin.clusters.index');
     },
   },
-
 
   // Add custom validation beyond what can be done from the config API schema
 
@@ -162,6 +218,9 @@ export default Ember.Component.extend(ClusterDriver, {
       "storagecontainer": { name: "Storage Container", type: "string" },
       "filesystem": { name: "Filesystem", type: "string" },
       "reclaimpolicy": { name: "Reclaim Policy", type: "string" },
+      "deployment": { name: "Deployment Type", type: "string" },
+      "masternodes": { name: "Amount of Master Nodes", type: "integer" },
+      "etcdnodes": { name: "Amount of ETCD Nodes", type: "integer" },
     }
 
     for (var k in keys) {
@@ -184,6 +243,9 @@ export default Ember.Component.extend(ClusterDriver, {
     if (!["Delete", "Retain"].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.reclaimpolicy'))) {
       errors.push('Reclaim policy must be Delete or Retain');
     }
+    if (!["Deployment", 'Production - active/passive', 'Production - active/active'].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.deployment'))) {
+      errors.push('Deployment type must be "Deployment", "Production - active/passive" or "Production - active/active"');
+    }
     // Add more specific errors
     // Set the array of errors for display,
     // and return true if saving should continue.
@@ -194,8 +256,6 @@ export default Ember.Component.extend(ClusterDriver, {
       set(this, 'errors', null);
       return true;
     }
-
-
   },
 
   // Any computed properties or custom logic can go here
@@ -219,5 +279,25 @@ export default Ember.Component.extend(ClusterDriver, {
       value: e[0]
     }))
   }),
+
+  deploymentChoices: Object.entries(deploymentOptionsMap).map((e) => ({
+    label: e[0],
+    value: e[0]
+  })),
+  amountOfMasterNodesChoices: computed('cluster.%%DRIVERNAME%%EngineConfig.deployment', function () {
+    let deployment = get(this, 'cluster.%%DRIVERNAME%%EngineConfig.deployment');
+    return Object.entries(deploymentOptionsMap[deployment]["amountOfMasters"]).map((e) => ({
+      label: e[0],
+      value: e[1]
+    }))
+  }),
+  amountOfETCDNodesChoices: computed('cluster.%%DRIVERNAME%%EngineConfig.deployment', function () {
+    let deployment = get(this, 'cluster.%%DRIVERNAME%%EngineConfig.deployment');
+    return Object.entries(deploymentOptionsMap[deployment]["amountOfETCDs"]).map((e) => ({
+      label: e[0],
+      value: e[1]
+    }))
+  }),
+
 });
 

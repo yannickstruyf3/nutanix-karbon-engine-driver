@@ -1,7 +1,7 @@
 Kontainer Engine Karbon Driver
 ===============================
 
-**Note**: This driver is still under development and only Karbon Development clusters can be requests as a result.
+**Note**: This driver is still under development.
 
 **Note**: This is NOT a Nutanix supported plugin.
 

@@ -66,11 +66,20 @@ type state struct {
 	StorageContainer    string
 	FlashMode           bool
 	CNIProvider         string
+	AmountOfMasterNodes int64
+	AmountOfETCDNodes   int64
+	Deployment          string
+	MasterVIPIP         string
+	MasterIP1           string
+	MasterIP2           string
+	MasterIP3           string
+	MasterIP4           string
+	MasterIP5           string
 	ClusterInfo         types.ClusterInfo
 }
 
-func (s state) GetEndpoint() string{
-	return fmt.Sprintf("%s:%d",s.Host,s.Port)
+func (s state) GetEndpoint() string {
+	return fmt.Sprintf("%s:%d", s.Host, s.Port)
 }
 
 func NewDriver() types.Driver {
@@ -113,6 +122,10 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.StringType,
 		Usage: "Password",
 	}
+	driverFlag.Options["deployment"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Deployment Type",
+	}
 	driverFlag.Options["display-name"] = &types.Flag{
 		Type:  types.StringType,
 		Usage: "the name of the cluster that should be displayed to the user",
@@ -120,6 +133,14 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 	driverFlag.Options["workernodes"] = &types.Flag{
 		Type:  types.IntType,
 		Usage: "Amount of worker nodes",
+	}
+	driverFlag.Options["masternodes"] = &types.Flag{
+		Type:  types.IntType,
+		Usage: "Amount of master nodes",
+	}
+	driverFlag.Options["etcdnodes"] = &types.Flag{
+		Type:  types.IntType,
+		Usage: "Amount of ETCD nodes",
 	}
 	driverFlag.Options["insecure"] = &types.Flag{
 		Type:  types.BoolType,
@@ -208,7 +229,30 @@ func (d *Driver) GetDriverCreateOptions(ctx context.Context) (*types.DriverFlags
 		Type:  types.StringType,
 		Usage: "CNI provider",
 	}
-
+	driverFlag.Options["mastervipip"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "VIP IP for the masters",
+	}
+	driverFlag.Options["masterip1"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Master 1 IP",
+	}
+	driverFlag.Options["masterip2"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Master 2 IP",
+	}
+	driverFlag.Options["masterip3"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Master 3 IP",
+	}
+	driverFlag.Options["masterip4"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Master 4 IP",
+	}
+	driverFlag.Options["masterip5"] = &types.Flag{
+		Type:  types.StringType,
+		Usage: "Master 5 IP",
+	}
 	return &driverFlag, nil
 }
 
@@ -271,7 +315,10 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 		Version:               state.Version,
 		ImageUUID:             state.ImageUUID,
 		Image:                 state.Image,
+		Deployment:            state.Deployment,
 		AmountOfWorkerNodes:   state.AmountOfWorkerNodes,
+		AmountOfETCDNodes:     state.AmountOfETCDNodes,
+		AmountOfMasterNodes:   state.AmountOfMasterNodes,
 		WorkerCPU:             state.WorkerCPU,
 		WorkerDiskMib:         state.WorkerDiskMib,
 		WorkerMemoryMib:       state.WorkerMemoryMib,
@@ -286,6 +333,12 @@ func (d *Driver) Create(ctx context.Context, opts *types.DriverOptions, _ *types
 		ClusterUser:           state.ClusterUser,
 		ClusterPassword:       state.ClusterPassword,
 		StorageContainer:      state.StorageContainer,
+		MasterVIPIP:           state.MasterVIPIP,
+		MasterIP1:             state.MasterIP1,
+		MasterIP2:             state.MasterIP2,
+		MasterIP3:             state.MasterIP3,
+		MasterIP4:             state.MasterIP4,
+		MasterIP5:             state.MasterIP5,
 		FileSystem:            state.FileSystem,
 		FlashMode:             false,
 		CNIProvider:           state.CNIProvider,
@@ -557,10 +610,12 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.DisplayName = options.GetValueFromDriverOptions(driverOptions, types.StringType, "display-name", "displayName").(string)
 	d.Username = options.GetValueFromDriverOptions(driverOptions, types.StringType, "username").(string)
 	d.Password = options.GetValueFromDriverOptions(driverOptions, types.StringType, "password").(string)
+	d.Deployment = options.GetValueFromDriverOptions(driverOptions, types.StringType, "deployment").(string)
 	d.Insecure = options.GetValueFromDriverOptions(driverOptions, types.BoolType, "insecure").(bool)
 	d.FlashMode = options.GetValueFromDriverOptions(driverOptions, types.BoolType, "flashmode").(bool)
 	d.AmountOfWorkerNodes = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workernodes").(int64)
-
+	d.AmountOfMasterNodes = options.GetValueFromDriverOptions(driverOptions, types.IntType, "masternodes").(int64)
+	d.AmountOfETCDNodes = options.GetValueFromDriverOptions(driverOptions, types.IntType, "etcdnodes").(int64)
 	d.WorkerCPU = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workercpu").(int64)
 	d.WorkerDiskMib = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workerdiskmib").(int64)
 	d.WorkerMemoryMib = options.GetValueFromDriverOptions(driverOptions, types.IntType, "workermemorymib").(int64)
@@ -579,7 +634,14 @@ func getStateFromOpts(driverOptions *types.DriverOptions) (state, error) {
 	d.VMNetwork = options.GetValueFromDriverOptions(driverOptions, types.StringType, "vmnetwork").(string)
 	d.Image = options.GetValueFromDriverOptions(driverOptions, types.StringType, "image").(string)
 	d.Cluster = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cluster").(string)
-    d.CNIProvider = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cniprovider").(string)
+	d.CNIProvider = options.GetValueFromDriverOptions(driverOptions, types.StringType, "cniprovider").(string)
+	d.MasterVIPIP = options.GetValueFromDriverOptions(driverOptions, types.StringType, "mastervipip").(string)
+	d.MasterIP1 = options.GetValueFromDriverOptions(driverOptions, types.StringType, "masterip1").(string)
+	d.MasterIP2 = options.GetValueFromDriverOptions(driverOptions, types.StringType, "masterip2").(string)
+	d.MasterIP3 = options.GetValueFromDriverOptions(driverOptions, types.StringType, "masterip3").(string)
+	d.MasterIP4 = options.GetValueFromDriverOptions(driverOptions, types.StringType, "masterip4").(string)
+	d.MasterIP5 = options.GetValueFromDriverOptions(driverOptions, types.StringType, "masterip5").(string)
+
 	utils.PrintToJSON(d, "[DEBUG] getStateFromOpts: ")
 	return d, d.validate()
 }
@@ -610,7 +672,18 @@ func (s *state) validate() error {
 	if s.Password == "" {
 		return fmt.Errorf("Password is required")
 	}
-
+	if s.Deployment == "" {
+		return fmt.Errorf("Deployment is required")
+	}
+	if s.Deployment != "Development" && s.Deployment != "Production - active/passive" && s.Deployment != "Production - active/active" {
+		return fmt.Errorf("Deployment value was incorrect: %s", s.Deployment)
+	}
+	if s.AmountOfETCDNodes < 1 {
+		return fmt.Errorf("AmountOfETCDNodes must be >= 1")
+	}
+	if s.AmountOfMasterNodes < 1 {
+		return fmt.Errorf("AmountOfMasterNodes must be >= 1")
+	}
 	if s.AmountOfWorkerNodes < 1 {
 		return fmt.Errorf("AmountOfWorkerNodes must be >= 1")
 	}

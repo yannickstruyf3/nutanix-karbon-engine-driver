@@ -1,7 +1,6 @@
 package karbon
 
 import (
-
 	"github.com/rancher/kontainer-engine-driver-karbon/client"
 	v3 "github.com/rancher/kontainer-engine-driver-karbon/client/v3"
 )
@@ -34,7 +33,16 @@ type KarbonClusterRequest struct {
 	FileSystem            string
 	StorageContainer      string
 	FlashMode             bool
-	CNIProvider			  string
+	CNIProvider           string
+	Deployment            string
+	AmountOfMasterNodes   int64
+	AmountOfETCDNodes     int64
+	MasterVIPIP           string
+	MasterIP1             string
+	MasterIP2             string
+	MasterIP3             string
+	MasterIP4             string
+	MasterIP5             string
 }
 
 type KarbonClusterInfo struct {
@@ -60,6 +68,6 @@ func NewKarbonManager(credentials client.Credentials) (KarbonManager, error) {
 		return nil, err
 	}
 	return &karbonManagerv21{
-			Client: client,
-		}, nil
+		Client: client,
+	}, nil
 }

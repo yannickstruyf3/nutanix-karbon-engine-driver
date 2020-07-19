@@ -205,12 +205,29 @@ type KarbonCluster21MetadataIntentInput struct {
 }
 
 type KarbonCluster21MasterConfigIntentInput struct {
-	SingleMasterConfig KarbonCluster21SingleMasterConfigIntentInput `json:"single_master_config" mapstructure:"single_master_config, omitempty"`
-	NodePools          []KarbonCluster21NodePoolIntentInput         `json:"node_pools" mapstructure:"node_pools, omitempty"`
+	SingleMasterConfig  *KarbonCluster21SingleMasterConfigIntentInput        `json:"single_master_config" mapstructure:"single_master_config, omitempty"`
+	ActivePassiveConfig *KarbonCluster21ActivePassiveMasterConfigIntentInput `json:"active_passive_config" mapstructure:"active_passive_config, omitempty"`
+	ExternalLBConfig    *KarbonCluster21ExternalLBMasterConfigIntentInput    `json:"external_lb_config" mapstructure:"external_lb_config, omitempty"`
+	NodePools           []KarbonCluster21NodePoolIntentInput                 `json:"node_pools" mapstructure:"node_pools, omitempty"`
+}
+
+type KarbonCluster21ActivePassiveMasterConfigIntentInput struct {
+	ExternalIPv4Address string `json:"external_ipv4_address" mapstructure:"external_ipv4_address, omitempty"`
+}
+
+type KarbonCluster21ExternalLBMasterConfigIntentInput struct {
+	ExternalIPv4Address string                                             `json:"external_ipv4_address" mapstructure:"external_ipv4_address, omitempty"`
+	MasterNodesConfig   []KarbonCluster21MasterNodeMasterConfigIntentInput `json:"master_nodes_config" mapstructure:"master_nodes_config, omitempty"`
+}
+
+type KarbonCluster21MasterNodeMasterConfigIntentInput struct {
+	IPv4Address  string `json:"ipv4_address" mapstructure:"ipv4_address, omitempty"`
+	NodePoolName string `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
 }
 
 type KarbonCluster21SingleMasterConfigIntentInput struct {
 }
+
 type KarbonCluster21WorkerConfigIntentInput struct {
 	NodePools []KarbonCluster21NodePoolIntentInput `json:"node_pools" mapstructure:"node_pools, omitempty"`
 }
@@ -219,19 +236,19 @@ type KarbonCluster21ETCDConfigIntentInput struct {
 }
 
 type KarbonCluster21CNIConfigIntentInput struct {
-	NodeCIDRMaskSize int64                                   `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
-	PodIPv4CIDR      string                                  `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
-	ServiceIPv4CIDR  string                                  `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
+	NodeCIDRMaskSize int64                                    `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
+	PodIPv4CIDR      string                                   `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
+	ServiceIPv4CIDR  string                                   `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
 	FlannelConfig    *KarbonCluster21FlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
-	CalicoConfig     *KarbonCluster21CalicoConfigIntentInput   `json:"calico_config" mapstructure:"calico_config, omitempty"`
+	CalicoConfig     *KarbonCluster21CalicoConfigIntentInput  `json:"calico_config" mapstructure:"calico_config, omitempty"`
 }
 
-type KarbonCluster21CalicoConfigIntentInput struct{
+type KarbonCluster21CalicoConfigIntentInput struct {
 	IpPoolConfigs []KarbonCluster21CalicoConfigIpPoolConfigIntentInput `json:"ip_pool_configs" mapstructure:"ip_pool_configs,omitempty"`
 }
 
-type KarbonCluster21CalicoConfigIpPoolConfigIntentInput struct{
-	CIDR string  `json:"cidr" mapstructure:"cidr"`
+type KarbonCluster21CalicoConfigIpPoolConfigIntentInput struct {
+	CIDR string `json:"cidr" mapstructure:"cidr"`
 }
 
 type KarbonCluster21FlannelConfigIntentInput struct{}
