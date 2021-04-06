@@ -35,6 +35,14 @@ const filesystemMap = {
 }
 
 const karbonVersionAndChoicesMap = {
+  '2.2.1': {
+    '1.18.15-1': '1.18.15-1',
+    '1.17.13-0': '1.17.13-0',
+    '1.16.15-0': '1.16.15-0',
+    '1.15.12-1': '1.15.12-1',
+    '1.14.10-2': '1.14.10-2',
+    '1.13.12-2': '1.13.12-2',
+  },
   '2.1': {
     '1.16.10-0': '1.16.10-0',
     '1.15.12-0': '1.15.12-0',
@@ -243,8 +251,8 @@ export default Ember.Component.extend(ClusterDriver, {
     if (!["Delete", "Retain"].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.reclaimpolicy'))) {
       errors.push('Reclaim policy must be Delete or Retain');
     }
-    if (!["Deployment", 'Production - active/passive', 'Production - active/active'].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.deployment'))) {
-      errors.push('Deployment type must be "Deployment", "Production - active/passive" or "Production - active/active"');
+    if (!["Development", 'Production - active/passive', 'Production - active/active'].includes(get(this, 'cluster.%%DRIVERNAME%%EngineConfig.deployment'))) {
+      errors.push('Deployment type must be "Development", "Production - active/passive" or "Production - active/active"');
     }
     // Add more specific errors
     // Set the array of errors for display,
@@ -274,7 +282,7 @@ export default Ember.Component.extend(ClusterDriver, {
     value: e[0]
   })),
   versionChoices: computed('cluster.%%DRIVERNAME%%EngineConfig.karbonversion', function () {
-    return Object.entries(karbonVersionAndChoicesMap["2.1"]).map((e) => ({
+    return Object.entries(karbonVersionAndChoicesMap["2.2.1"]).map((e) => ({
       label: e[0],
       value: e[0]
     }))
